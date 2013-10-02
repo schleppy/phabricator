@@ -15,6 +15,14 @@ final class DifferentialChangesetOneUpRenderer
     $primitives = $this->buildPrimitives($range_start, $range_len);
 
     $out = array();
+    $left_char = $this->getOldAttachesToNewFile()
+      ? 'N'
+      : 'O';
+    $right_char = $this->getNewAttachesToNewFile()
+      ? 'N'
+      : 'O';
+    $left_id = $this->getOldChangesetID();
+    $right_id = $this->getNewChangesetID();
     foreach ($primitives as $p) {
       $type = $p['type'];
       switch ($type) {
@@ -29,7 +37,8 @@ final class DifferentialChangesetOneUpRenderer
             }
             $out[] = hsprintf('<th>%s</th>', $p['line']);
             $out[] = hsprintf('<th></th>');
-            $out[] = hsprintf('<td class="%s">%s</td>', $class, $p['render']);
+            $out[] = hsprintf('<td style="width: 0px;min-width:0px;"></td>');
+            $out[] = hsprintf('<td class="%s" style="width:100%%;">%s</td>', $class, $p['render']);
           } else if ($type == 'new') {
             if ($p['htype']) {
               $class = 'right new';
@@ -38,14 +47,19 @@ final class DifferentialChangesetOneUpRenderer
               $class = 'right';
               $out[] = hsprintf('<th>%s</th>', $p['oline']);
             }
-            $out[] = hsprintf('<th>%s</th>', $p['line']);
-            $out[] = hsprintf('<td class="%s">%s</td>', $class, $p['render']);
+            #$out[] = hsprintf('<th>%s</th>', $p['line']);
+            #$out[] = hsprintf('<td class="%s">%s</td>', $class, $p['render']);
+            $n_id = hsprintf('id="C%s%sL%s"', $right_id, $right_char, $p['line']);
+            $out[] = hsprintf('<th %s>%s</th>', $n_id, $p['line']);
+            $out[] = hsprintf('<td style="width:0px;min-width:0px;"></td>');
+            $out[] = hsprintf('<td class="%s" style="width:100%%;">%s</td>', $class, $p['render']);
           }
           $out[] = hsprintf('</tr>');
           break;
         case 'inline':
           $out[] = hsprintf('<tr><th /><th />');
-          $out[] = hsprintf('<td>');
+          $out[] = hsprintf('<td style="width: 0px;min-width:0px;"></td>');
+          $out[] = hsprintf('<td style="width:100%%;">');
 
           $inline = $this->buildInlineComment(
             $p['comment'],
@@ -56,7 +70,7 @@ final class DifferentialChangesetOneUpRenderer
           $out[] = hsprintf('</td></tr>');
           break;
         default:
-          $out[] = hsprintf('<tr><th /><th /><td>%s</td></tr>', $type);
+          $out[] = hsprintf('<tr><th /><th /><td style="width: 0px;min-width:0px;"></td><td style="width:100%%;">%s</td></tr>', $type);
           break;
       }
     }

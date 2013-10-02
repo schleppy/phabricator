@@ -111,6 +111,7 @@ final class PhabricatorBotFeedNotificationHandler
 
       return;
     }
+    // Going to modify this in the future to handle getting actual comment
 
     $config_max_pages = $this->getConfig('notification.max_pages', 5);
     $config_page_size = $this->getConfig('notification.page_size', 10);

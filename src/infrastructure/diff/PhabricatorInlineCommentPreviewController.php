@@ -25,8 +25,15 @@ abstract class PhabricatorInlineCommentPreviewController
     $handles = $this->loadViewerHandles($phids);
 
     $views = array();
+    $udiff = PhabricatorUserPreferences::PREFERENCE_UDIFF;
+    $pref_udiff = $user->loadPreferences()->getPreference($udiff, 0);
     foreach ($inlines as $inline) {
       $view = new DifferentialInlineCommentView();
+      if ($pref_udiff) {
+          $view = new DifferentialInlineCommentOneUpView();
+      } else {
+          $view = new DifferentialInlineCommentView();
+      }
       $view->setInlineComment($inline);
       $view->setMarkupEngine($engine);
       $view->setHandles($handles);

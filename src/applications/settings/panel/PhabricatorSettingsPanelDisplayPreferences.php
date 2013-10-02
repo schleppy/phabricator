@@ -20,6 +20,7 @@ final class PhabricatorSettingsPanelDisplayPreferences
     $preferences = $user->loadPreferences();
 
     $pref_monospaced   = PhabricatorUserPreferences::PREFERENCE_MONOSPACED;
+    $pref_udiff        = PhabricatorUserPreferences::PREFERENCE_UDIFF;
     $pref_editor       = PhabricatorUserPreferences::PREFERENCE_EDITOR;
     $pref_multiedit    = PhabricatorUserPreferences::PREFERENCE_MULTIEDIT;
     $pref_titles       = PhabricatorUserPreferences::PREFERENCE_TITLES;
@@ -41,6 +42,9 @@ final class PhabricatorSettingsPanelDisplayPreferences
       $preferences->setPreference(
         $pref_monospaced_textareas,
         $request->getStr($pref_monospaced_textareas));
+      $preferences->setPreference(
+        $pref_udiff,
+        $request->getBool($pref_udiff));
 
       $preferences->save();
       return id(new AphrontRedirectResponse())
@@ -68,6 +72,10 @@ EXAMPLE;
       ->getPreference($pref_monospaced_textareas);
     if (!$pref_monospaced_textareas_value) {
       $pref_monospaced_textareas_value = 'disabled';
+    }
+    $pref_udiff_value = $preferences->getPreference($pref_udiff);
+    if (!$pref_udiff_value) {
+        $pref_udiff_value = 0;
     }
 
     $editor_instructions = pht('Link to edit files in external editor. '.
@@ -124,6 +132,15 @@ EXAMPLE;
           'pre',
           array('class' => 'PhabricatorMonospaced'),
           $example_string)))
+      ->appendChild(
+       id(new AphrontFormRadioButtonControl())
+        ->setLabel('UDiff in Differential')
+        ->setName($pref_udiff)
+        ->setValue($pref_udiff_value ?
+            $pref_udiff_value : 0)
+        ->addButton(1, 'Enabled',
+          'Enabling and using udiffs.')
+        ->addButton(0, 'Disabled', null))
       ->appendChild(
         id(new AphrontFormRadioButtonControl())
         ->setLabel(pht('Monospaced Textareas'))

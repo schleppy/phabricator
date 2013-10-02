@@ -179,6 +179,11 @@ final class DifferentialChangesetViewController extends DifferentialController {
     if ($request->getStr('renderer') == '1up') {
       $parser->setRenderer(new DifferentialChangesetOneUpRenderer());
     }
+    $user = $this->getRequest()->getUser();
+    $udiff = PhabricatorUserPreferences::PREFERENCE_UDIFF;
+    if ($user->loadPreferences()->getPreference($udiff, 0)) {
+      $parser->setRenderer(new DifferentialChangesetOneUpRenderer());
+    }
 
 
     if ($left && $right) {

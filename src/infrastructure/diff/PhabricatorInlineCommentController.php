@@ -181,7 +181,12 @@ abstract class PhabricatorInlineCommentController
     $request = $this->getRequest();
     $user = $request->getUser();
 
-    $edit_dialog = new DifferentialInlineCommentEditView();
+    $udiff = PhabricatorUserPreferences::PREFERENCE_UDIFF;
+    if ($user->loadPreferences()->getPreference($udiff, 0)) {
+      $edit_dialog = new DifferentialInlineCommentOneUpEditView();
+    } else {
+      $edit_dialog = new DifferentialInlineCommentEditView();
+    }
     $edit_dialog->setUser($user);
     $edit_dialog->setSubmitURI($request->getRequestURI());
     $edit_dialog->setOnRight($this->getIsOnRight());
@@ -217,7 +222,12 @@ abstract class PhabricatorInlineCommentController
 
     $handles = $this->loadViewerHandles($phids);
 
-    $view = new DifferentialInlineCommentView();
+    $udiff = PhabricatorUserPreferences::PREFERENCE_UDIFF;
+    if ($user->loadPreferences()->getPreference($udiff, 0)) {
+        $view = new DifferentialInlineCommentOneUpView();
+    } else {
+        $view = new DifferentialInlineCommentView();
+    }
     $view->setInlineComment($inline);
     $view->setOnRight($on_right);
     $view->setBuildScaffolding(true);

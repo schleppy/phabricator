@@ -39,3 +39,6 @@
 
 # User extensions
 /src/extensions/*
+
+/.arcconfig
+/resources/chatbot/config.json

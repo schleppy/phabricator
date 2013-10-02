@@ -47,8 +47,6 @@ final class DifferentialChangesetOneUpRenderer
               $class = 'right';
               $out[] = hsprintf('<th>%s</th>', $p['oline']);
             }
-            #$out[] = hsprintf('<th>%s</th>', $p['line']);
-            #$out[] = hsprintf('<td class="%s">%s</td>', $class, $p['render']);
             $n_id = hsprintf('id="C%s%sL%s"', $right_id, $right_char, $p['line']);
             $out[] = hsprintf('<th %s>%s</th>', $n_id, $p['line']);
             $out[] = hsprintf('<td style="width:0px;min-width:0px;"></td>');

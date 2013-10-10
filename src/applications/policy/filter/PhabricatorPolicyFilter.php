@@ -173,9 +173,10 @@ final class PhabricatorPolicyFilter {
         $policy = PhabricatorPolicies::POLICY_USER;
       }
 
-      // If the object is set to "public" but the capability is anything other
-      // than "view", restrict the policy to "user".
-      if ($capability != PhabricatorPolicyCapability::CAN_VIEW) {
+      // If the object is set to "public" but the capability is not a public
+      // capability, restrict the policy to "user".
+      $capobj = PhabricatorPolicyCapability::getCapabilityByKey($capability);
+      if (!$capobj || !$capobj->shouldAllowPublicPolicySetting()) {
         $policy = PhabricatorPolicies::POLICY_USER;
       }
     }
@@ -233,33 +234,6 @@ final class PhabricatorPolicyFilter {
     return false;
   }
 
-  private function rejectImpossiblePolicy(
-    PhabricatorPolicyInterface $object,
-    $policy,
-    $capability) {
-
-    if (!$this->raisePolicyExceptions) {
-      return;
-    }
-
-    switch ($capability) {
-      case PhabricatorPolicyCapability::CAN_VIEW:
-        $message = pht("This object has an impossible view policy.");
-        break;
-      case PhabricatorPolicyCapability::CAN_EDIT:
-        $message = pht("This object has an impossible edit policy.");
-        break;
-      case PhabricatorPolicyCapability::CAN_JOIN:
-        $message = pht("This object has an impossible join policy.");
-        break;
-      default:
-        $message = pht("This object has an impossible policy.");
-        break;
-    }
-
-    throw new PhabricatorPolicyException($message);
-  }
-
   public function rejectObject(
     PhabricatorPolicyInterface $object,
     $policy,
@@ -269,111 +243,76 @@ final class PhabricatorPolicyFilter {
       return;
     }
 
-    $more = array();
-    switch ($capability) {
-      case PhabricatorPolicyCapability::CAN_VIEW:
-        $message = pht(
-          'This object exists, but you do not have permission to view it.');
-        break;
-      case PhabricatorPolicyCapability::CAN_EDIT:
-        $message = pht('You do not have permission to edit this object.');
-        break;
-      case PhabricatorPolicyCapability::CAN_JOIN:
-        $message = pht('You do not have permission to join this object.');
-        break;
+    $capobj = PhabricatorPolicyCapability::getCapabilityByKey($capability);
+    $rejection = null;
+    if ($capobj) {
+      $rejection = $capobj->describeCapabilityRejection();
+      $capability_name = $capobj->getCapabilityName();
+    } else {
+      $capability_name = $capability;
     }
 
-    switch ($policy) {
-      case PhabricatorPolicies::POLICY_PUBLIC:
-        // Presumably, this is a bug, so we don't bother specializing the
-        // strings.
-        $more = pht('This object is public.');
-        break;
-      case PhabricatorPolicies::POLICY_USER:
-        // We always raise this as "log in", so we don't need to specialize.
-        $more = pht('This object is available to logged in users.');
-        break;
-      case PhabricatorPolicies::POLICY_ADMIN:
-        switch ($capability) {
-          case PhabricatorPolicyCapability::CAN_VIEW:
-            $more = pht('Administrators can view this object.');
-            break;
-          case PhabricatorPolicyCapability::CAN_EDIT:
-            $more = pht('Administrators can edit this object.');
-            break;
-          case PhabricatorPolicyCapability::CAN_JOIN:
-            $more = pht('Administrators can join this object.');
-            break;
-        }
-        break;
-      case PhabricatorPolicies::POLICY_NOONE:
-        switch ($capability) {
-          case PhabricatorPolicyCapability::CAN_VIEW:
-            $more = pht('By default, no one can view this object.');
-            break;
-          case PhabricatorPolicyCapability::CAN_EDIT:
-            $more = pht('By default, no one can edit this object.');
-            break;
-          case PhabricatorPolicyCapability::CAN_JOIN:
-            $more = pht('By default, no one can join this object.');
-            break;
-        }
-        break;
-      default:
-        $handle = id(new PhabricatorHandleQuery())
-          ->setViewer($this->viewer)
-          ->withPHIDs(array($policy))
-          ->executeOne();
-
-        $type = phid_get_type($policy);
-        if ($type == PhabricatorProjectPHIDTypeProject::TYPECONST) {
-          switch ($capability) {
-            case PhabricatorPolicyCapability::CAN_VIEW:
-              $more = pht(
-                'This object is visible to members of the project "%s".',
-                $handle->getFullName());
-              break;
-            case PhabricatorPolicyCapability::CAN_EDIT:
-              $more = pht(
-                'This object can be edited by members of the project "%s".',
-                $handle->getFullName());
-              break;
-            case PhabricatorPolicyCapability::CAN_JOIN:
-              $more = pht(
-                'This object can be joined by members of the project "%s".',
-                $handle->getFullName());
-              break;
-          }
-        } else if ($type == PhabricatorPeoplePHIDTypeUser::TYPECONST) {
-          switch ($capability) {
-            case PhabricatorPolicyCapability::CAN_VIEW:
-              $more = pht(
-                '%s can view this object.',
-                $handle->getFullName());
-              break;
-            case PhabricatorPolicyCapability::CAN_EDIT:
-              $more = pht(
-                '%s can edit this object.',
-                $handle->getFullName());
-              break;
-            case PhabricatorPolicyCapability::CAN_JOIN:
-              $more = pht(
-                '%s can join this object.',
-                $handle->getFullName());
-              break;
-          }
-        } else {
-          $more = pht("This object has an unknown or invalid policy setting.");
-        }
-        break;
+    if (!$rejection) {
+      // We couldn't find the capability object, or it doesn't provide a
+      // tailored rejection string.
+      $rejection = pht(
+        'You do not have the required capability ("%s") to do whatever you '.
+        'are trying to do.',
+        $capability);
     }
 
-    $more = array_merge(
-      array($more),
-      array_filter((array)$object->describeAutomaticCapability($capability)));
+    $more = PhabricatorPolicy::getPolicyExplanation($this->viewer, $policy);
+    $exceptions = $object->describeAutomaticCapability($capability);
 
-    $exception = new PhabricatorPolicyException($message);
-    $exception->setMoreInfo($more);
+    $details = array_filter(array_merge(array($more), (array)$exceptions));
+
+    // NOTE: Not every policy object has a PHID, just pull an arbitrary
+    // "unknown object" handle if this fails. We're just using this to provide
+    // a better error message if we can.
+
+    $phid = '?';
+    if (($object instanceof PhabricatorLiskDAO) ||
+        (method_exists($object, 'getPHID'))) {
+      try {
+        $phid = $object->getPHID();
+      } catch (Exception $ignored) {
+        // Ignore.
+      }
+    }
+
+    $handle = id(new PhabricatorHandleQuery())
+      ->setViewer($this->viewer)
+      ->withPHIDs(array($phid))
+      ->executeOne();
+
+    $object_name = pht(
+      '%s %s',
+      $handle->getTypeName(),
+      $handle->getObjectName());
+
+    $is_serious = PhabricatorEnv::getEnvConfig('phabricator.serious-business');
+    if ($is_serious) {
+      $title = pht(
+        'Access Denied: %s',
+        $object_name);
+    } else {
+      $title = pht(
+        'You Shall Not Pass: %s',
+        $object_name);
+    }
+
+    $full_message = pht(
+      '[%s] (%s) %s // %s',
+      $title,
+      $capability_name,
+      $rejection,
+      implode(' ', $details));
+
+    $exception = id(new PhabricatorPolicyException($full_message))
+      ->setTitle($title)
+      ->setRejection($rejection)
+      ->setCapabilityName($capability_name)
+      ->setMoreInfo($details);
 
     throw $exception;
   }

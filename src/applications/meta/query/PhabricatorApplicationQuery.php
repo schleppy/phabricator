@@ -7,7 +7,14 @@ final class PhabricatorApplicationQuery
   private $beta;
   private $firstParty;
   private $nameContains;
+  private $unlisted;
   private $classes;
+  private $phids;
+
+  const ORDER_APPLICATION = 'order:application';
+  const ORDER_NAME = 'order:name';
+
+  private $order = self::ORDER_APPLICATION;
 
   public function withNameContains($name_contains) {
     $this->nameContains = $name_contains;
@@ -29,8 +36,23 @@ final class PhabricatorApplicationQuery
     return $this;
   }
 
+  public function withUnlisted($unlisted) {
+    $this->unlisted = $unlisted;
+    return $this;
+  }
+
   public function withClasses(array $classes) {
     $this->classes = $classes;
+    return $this;
+  }
+
+  public function withPHIDs(array $phids) {
+    $this->phids = $phids;
+    return $this;
+  }
+
+  public function setOrder($order) {
+    $this->order = $order;
     return $this;
   }
 
@@ -41,6 +63,15 @@ final class PhabricatorApplicationQuery
       $classes = array_fuse($this->classes);
       foreach ($apps as $key => $app) {
         if (empty($classes[get_class($app)])) {
+          unset($apps[$key]);
+        }
+      }
+    }
+
+    if ($this->phids) {
+      $phids = array_fuse($this->phids);
+      foreach ($apps as $key => $app) {
+        if (empty($phids[$app->getPHID()])) {
           unset($apps[$key]);
         }
       }
@@ -78,7 +109,27 @@ final class PhabricatorApplicationQuery
       }
     }
 
-    return msort($apps, 'getName');
+    if ($this->unlisted !== null) {
+      foreach ($apps as $key => $app) {
+        if ($app->isUnlisted() != $this->unlisted) {
+          unset($apps[$key]);
+        }
+      }
+    }
+
+    switch ($this->order) {
+      case self::ORDER_NAME:
+        $apps = msort($apps, 'getName');
+        break;
+      case self::ORDER_APPLICATION:
+        $apps = $apps;
+        break;
+      default:
+        throw new Exception(
+          pht('Unknown order "%s"!', $this->order));
+    }
+
+    return $apps;
   }
 
 }

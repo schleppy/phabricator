@@ -34,9 +34,7 @@ final class ManiphestTaskEditController extends ManiphestController {
         return new Aphront404Response();
       }
     } else {
-      $task = new ManiphestTask();
-      $task->setPriority(ManiphestTaskPriority::getDefaultPriority());
-      $task->setAuthorPHID($user->getPHID());
+      $task = ManiphestTask::initializeNewTask($user);
 
       // These allow task creation with defaults.
       if (!$request->isFormPost()) {
@@ -343,8 +341,6 @@ final class ManiphestTaskEditController extends ManiphestController {
 
     $handles = $this->loadViewerHandles($phids);
 
-    $tvalues = mpull($handles, 'getFullName', 'getPHID');
-
     $error_view = null;
     if ($errors) {
       $error_view = new AphrontErrorView();
@@ -355,21 +351,19 @@ final class ManiphestTaskEditController extends ManiphestController {
     $priority_map = ManiphestTaskPriority::getTaskPriorityMap();
 
     if ($task->getOwnerPHID()) {
-      $assigned_value = array(
-        $task->getOwnerPHID() => $handles[$task->getOwnerPHID()]->getFullName(),
-      );
+      $assigned_value = array($handles[$task->getOwnerPHID()]);
     } else {
       $assigned_value = array();
     }
 
     if ($task->getCCPHIDs()) {
-      $cc_value = array_select_keys($tvalues, $task->getCCPHIDs());
+      $cc_value = array_select_keys($handles, $task->getCCPHIDs());
     } else {
       $cc_value = array();
     }
 
     if ($task->getProjectPHIDs()) {
-      $projects_value = array_select_keys($tvalues, $task->getProjectPHIDs());
+      $projects_value = array_select_keys($handles, $task->getProjectPHIDs());
     } else {
       $projects_value = array();
     }

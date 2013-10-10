@@ -7,9 +7,8 @@ final class PhabricatorManiphestTaskTestDataGenerator
     $authorPHID = $this->loadPhabrictorUserPHID();
     $author = id(new PhabricatorUser())
           ->loadOneWhere('phid = %s', $authorPHID);
-    $task = id(new ManiphestTask())
+    $task = ManiphestTask::initializeNewTask($author)
       ->setSubPriority($this->generateTaskSubPriority())
-      ->setAuthorPHID($authorPHID)
       ->setTitle($this->generateTitle())
       ->setStatus(ManiphestTaskStatus::STATUS_OPEN);
 
@@ -49,7 +48,7 @@ final class PhabricatorManiphestTaskTestDataGenerator
       ->setContinueOnNoEffect(true)
       ->setContinueOnMissingFields(true)
       ->applyTransactions($task, $transactions);
-    return $task->save();
+    return $task;
   }
 
   public function getCCPHIDs() {

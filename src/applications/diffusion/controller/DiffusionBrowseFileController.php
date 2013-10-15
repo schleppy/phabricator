@@ -107,10 +107,10 @@ final class DiffusionBrowseFileController extends DiffusionBrowseController {
       $show_color,
       $binary_uri);
 
+    $properties = $this->buildPropertyView($drequest, $action_list);
     $object_box = id(new PHUIObjectBoxView())
       ->setHeader($this->buildHeaderView($drequest))
-      ->setActionList($action_list)
-      ->setPropertyList($this->buildPropertyView($drequest));
+      ->addPropertyList($properties);
 
     $content = array();
     $content[] = $object_box;
@@ -822,21 +822,22 @@ final class DiffusionBrowseFileController extends DiffusionBrowseController {
   }
 
   private function buildImageCorpus($file_uri) {
-    $properties = new PhabricatorPropertyListView();
+    $properties = new PHUIPropertyListView();
 
-    $properties->addProperty(
-      pht('Image'),
+    $properties->addImageContent(
       phutil_tag(
         'img',
         array(
           'src' => $file_uri,
         )));
 
-    return $properties;
+    return id(new PHUIObjectBoxView())
+      ->setHeaderText(pht('Image'))
+      ->addPropertyList($properties);
   }
 
   private function buildBinaryCorpus($file_uri, $data) {
-    $properties = new PhabricatorPropertyListView();
+    $properties = new PHUIPropertyListView();
 
     $size = strlen($data);
     $properties->addTextContent(

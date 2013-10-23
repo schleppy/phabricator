@@ -104,6 +104,10 @@ abstract class ConduitAPIMethod
     return true;
   }
 
+  public function shouldAllowPublic() {
+    return false;
+  }
+
   public function shouldAllowUnguardedWrites() {
     return false;
   }
@@ -177,14 +181,24 @@ abstract class ConduitAPIMethod
   }
 
   public function getPolicy($capability) {
-    return PhabricatorPolicies::POLICY_USER;
+    // Application methods get application visibility; other methods get open
+    // visibility.
+
+    $application = $this->getApplication();
+    if ($application) {
+      return $application->getPolicy($capability);
+    }
+
+    return PhabricatorPolicies::getMostOpenPolicy();
   }
 
   public function hasAutomaticCapability($capability, PhabricatorUser $viewer) {
-    // The policy interface on Conduit calls is currently just to let us hook
-    // into ApplicationSearch. Calls are always visible (even to logged out
-    // users).
-    return true;
+    if (!$this->shouldRequireAuthentication()) {
+      // Make unauthenticated methods univerally visible.
+      return true;
+    }
+
+    return false;
   }
 
   public function describeAutomaticCapability($capability) {

@@ -1672,6 +1672,38 @@ final class PhabricatorBuiltinPatchList extends PhabricatorSQLPatchList {
         'type' => 'sql',
         'name' => $this->getPatchPath('20131010.pstorage.sql'),
       ),
+      '20131015.cpolicy.sql' => array(
+        'type' => 'sql',
+        'name' => $this->getPatchPath('20131015.cpolicy.sql'),
+      ),
+      '20130915.maniphestqdrop.sql' => array(
+        'type' => 'sql',
+        'name' => $this->getPatchPath('20130915.maniphestqdrop.sql'),
+      ),
+      '20130926.dinline.php' => array(
+        'type' => 'php',
+        'name' => $this->getPatchPath('20130926.dinline.php'),
+      ),
+      '20131020.pcustom.sql' => array(
+        'type' => 'sql',
+        'name' => $this->getPatchPath('20131020.pcustom.sql'),
+      ),
+      '20131020.col1.sql' => array(
+        'type' => 'sql',
+        'name' => $this->getPatchPath('20131020.col1.sql'),
+      ),
+      '20131020.pxaction.sql' => array(
+        'type' => 'sql',
+        'name' => $this->getPatchPath('20131020.pxaction.sql'),
+      ),
+      '20131020.pxactionmig.php' => array(
+        'type' => 'php',
+        'name' => $this->getPatchPath('20131020.pxactionmig.php'),
+      ),
+      '20131020.harbormaster.sql' => array(
+        'type' => 'sql',
+        'name' => $this->getPatchPath('20131020.harbormaster.sql'),
+      ),
     );
   }
 }

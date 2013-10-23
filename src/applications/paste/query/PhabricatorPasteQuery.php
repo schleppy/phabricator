@@ -175,7 +175,14 @@ final class PhabricatorPasteQuery
         unset($pastes[$key]);
         continue;
       }
-      $paste->attachRawContent($file->loadFileData());
+      try {
+        $paste->attachRawContent($file->loadFileData());
+      } catch (Exception $ex) {
+        // We can hit various sorts of file storage issues here. Just drop the
+        // paste if the file is dead.
+        unset($pastes[$key]);
+        continue;
+      }
     }
 
     return $pastes;
@@ -240,6 +247,11 @@ final class PhabricatorPasteQuery
         $language,
         $source);
     }
+  }
+
+
+  public function getQueryApplicationClass() {
+    return 'PhabricatorApplicationPaste';
   }
 
 }

@@ -1704,6 +1704,38 @@ final class PhabricatorBuiltinPatchList extends PhabricatorSQLPatchList {
         'type' => 'sql',
         'name' => $this->getPatchPath('20131020.harbormaster.sql'),
       ),
+      '20131025.repopush.sql' => array(
+        'type' => 'sql',
+        'name' => $this->getPatchPath('20131025.repopush.sql'),
+      ),
+      '20131026.commitstatus.sql' => array(
+        'type' => 'sql',
+        'name' => $this->getPatchPath('20131026.commitstatus.sql'),
+      ),
+      '20131030.repostatusmessage.sql' => array(
+        'type' => 'sql',
+        'name' => $this->getPatchPath('20131030.repostatusmessage.sql'),
+      ),
+      '20131031.vcspassword.sql' => array(
+        'type' => 'sql',
+        'name' => $this->getPatchPath('20131031.vcspassword.sql'),
+      ),
+      '20131105.buildstep.sql' => array(
+        'type' => 'sql',
+        'name' => $this->getPatchPath('20131105.buildstep.sql'),
+      ),
+      '20131106.diffphid.1.col.sql' => array(
+        'type' => 'sql',
+        'name' => $this->getPatchPath('20131106.diffphid.1.col.sql'),
+      ),
+      '20131106.diffphid.2.mig.php' => array(
+        'type' => 'php',
+        'name' => $this->getPatchPath('20131106.diffphid.2.mig.php'),
+      ),
+      '20131106.diffphid.3.key.sql' => array(
+        'type' => 'sql',
+        'name' => $this->getPatchPath('20131106.diffphid.3.key.sql'),
+      ),
     );
   }
 }

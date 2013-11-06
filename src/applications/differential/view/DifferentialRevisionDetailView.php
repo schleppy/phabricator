@@ -115,21 +115,27 @@ final class DifferentialRevisionDetailView extends AphrontView {
     $properties->invokeWillRenderEvent();
 
     if (strlen($revision->getSummary())) {
-      $properties->addSectionHeader(pht('Summary'));
+      $properties->addSectionHeader(
+        pht('Summary'),
+        PHUIPropertyListView::ICON_SUMMARY);
       $properties->addTextContent(
         PhabricatorMarkupEngine::renderOneObject(
-          id(new PhabricatorMarkupOneOff())->setContent(
-            $revision->getSummary()),
+          id(new PhabricatorMarkupOneOff())
+            ->setPreserveLinebreaks(true)
+            ->setContent($revision->getSummary()),
           'default',
           $user));
     }
 
     if (strlen($revision->getTestPlan())) {
-      $properties->addSectionHeader(pht('Test Plan'));
+      $properties->addSectionHeader(
+        pht('Test Plan'),
+        PHUIPropertyListView::ICON_TESTPLAN);
       $properties->addTextContent(
         PhabricatorMarkupEngine::renderOneObject(
-          id(new PhabricatorMarkupOneOff())->setContent(
-            $revision->getTestPlan()),
+          id(new PhabricatorMarkupOneOff())
+            ->setPreserveLinebreaks(true)
+            ->setContent($revision->getTestPlan()),
           'default',
           $user));
     }

@@ -107,21 +107,16 @@ final class PhrictionDiffController
       $crumbs->addCrumb($view);
     }
 
-    $crumbs->addCrumb(
-      id(new PhabricatorCrumbView())
-        ->setName(pht('History'))
-        ->setHref(PhrictionDocument::getSlugURI($slug, 'history')));
-
+    $crumbs->addTextCrumb(
+      pht('History'),
+      PhrictionDocument::getSlugURI($slug, 'history'));
 
     $title = pht("Version %s vs %s", $l, $r);
 
     $header = id(new PHUIHeaderView())
       ->setHeader($title);
 
-    $crumbs->addCrumb(
-      id(new PhabricatorCrumbView())
-        ->setName($title)
-        ->setHref($request->getRequestURI()));
+    $crumbs->addTextCrumb($title, $request->getRequestURI());
 
 
     $comparison_table = $this->renderComparisonTable(
@@ -174,15 +169,13 @@ final class PhrictionDiffController
           pht('Most Recent Change'));
       }
 
-      $navigation_table = hsprintf(
-        '<table class="phriction-history-nav-table">
-          <tr>
-            <td class="nav-prev">%s</td>
-            <td class="nav-next">%s</td>
-          </tr>
-        </table>',
-        $link_l,
-        $link_r);
+      $navigation_table = phutil_tag(
+        'table',
+        array('class' => 'phriction-history-nav-table'),
+        phutil_tag('tr', array(), array(
+          phutil_tag('td', array('class' => 'nav-prev'), $link_l),
+          phutil_tag('td', array('class' => 'nav-next'), $link_r),
+        )));
     }
 
 

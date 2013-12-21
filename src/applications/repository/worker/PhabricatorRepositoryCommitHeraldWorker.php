@@ -66,6 +66,11 @@ final class PhabricatorRepositoryCommitHeraldWorker
       $this->createAudits($commit, $audit_phids, $cc_phids, $rules);
     }
 
+    HarbormasterBuildable::applyBuildPlans(
+      $commit->getPHID(),
+      $repository->getPHID(),
+      $adapter->getBuildPlans());
+
     $explicit_auditors = $this->createAuditsFromCommitMessage($commit, $data);
 
     if ($repository->getDetail('herald-disabled')) {
@@ -227,14 +232,12 @@ final class PhabricatorRepositoryCommitHeraldWorker
           }
           if ($status == PhabricatorAuditStatusConstants::AUDIT_REQUIRED) {
             $reasons[] = pht(
-              'Herald Rule #%d "%s" Triggered Audit',
-              $id,
-              $rule_name);
+              '%s Triggered Audit',
+              "H{$id} {$rule_name}");
           } else {
             $reasons[] = pht(
-              'Herald Rule #%d "%s" Triggered CC',
-              $id,
-              $rule_name);
+              '%s Triggered CC',
+              "H{$id} {$rule_name}");
           }
         }
 

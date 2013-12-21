@@ -26,6 +26,17 @@ final class DiffusionRepositoryNewController
       }
     }
 
+    $doc_href = PhabricatorEnv::getDoclink(
+      'article/Diffusion_User_Guide_Repository_Hosting.html');
+
+    $doc_link = phutil_tag(
+      'a',
+      array(
+        'href' => $doc_href,
+        'target' => '_blank',
+      ),
+      pht('Diffusion User Guide: Repository Hosting'));
+
     $form = id(new AphrontFormView())
       ->setUser($viewer)
       ->appendChild(
@@ -36,13 +47,10 @@ final class DiffusionRepositoryNewController
             pht('Create a New Hosted Repository'),
             array(
               pht(
-                'Create a new, empty repository which Phabricator will host.'),
-              phutil_tag('br'),
-              pht(
-                '%s: This feature is very new and barely works. Use it '.
-                'at your own risk! By choosing this option, you accept great '.
-                'mortal peril.',
-                phutil_tag('strong', array(), pht('BEWARE'))),
+                'Create a new, empty repository which Phabricator will host. '.
+                'For instructions on configuring repository hosting, see %s. '.
+                'This feature is new and in beta!',
+                $doc_link),
             ))
           ->addButton(
             'import',
@@ -59,9 +67,7 @@ final class DiffusionRepositoryNewController
           ->addCancelButton($this->getApplicationURI()));
 
     $crumbs = $this->buildApplicationCrumbs();
-    $crumbs->addCrumb(
-      id(new PhabricatorCrumbView())
-        ->setName(pht('New Repository')));
+    $crumbs->addTextCrumb(pht('New Repository'));
 
     $form_box = id(new PHUIObjectBoxView())
       ->setHeaderText(pht('Create or Import Repository'))

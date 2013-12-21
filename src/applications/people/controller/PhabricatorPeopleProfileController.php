@@ -71,9 +71,7 @@ final class PhabricatorPeopleProfileController
     $properties = $this->buildPropertyView($user, $actions);
 
     $crumbs = $this->buildApplicationCrumbs();
-    $crumbs->addCrumb(
-      id(new PhabricatorCrumbView())
-        ->setName($user->getUsername()));
+    $crumbs->addTextCrumb($user->getUsername());
     $feed = $this->renderUserFeed($user);
 
     $object_box = id(new PHUIObjectBoxView())
@@ -127,10 +125,8 @@ final class PhabricatorPeopleProfileController
     $builder->setShowHovercards(true);
     $view = $builder->buildView();
 
-    return hsprintf(
-      '<div class="profile-feed profile-wrap-responsive">
-        %s
-      </div>',
+    return phutil_tag_div(
+      'profile-feed profile-wrap-responsive',
       $view->render());
   }
 }

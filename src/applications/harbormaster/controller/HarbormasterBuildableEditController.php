@@ -42,8 +42,11 @@ final class HarbormasterBuildableEditController
           ->executeOne();
 
         if ($object instanceof DifferentialRevision) {
-          throw new Exception(
-            "TODO: We need to assign PHIDs to diffs before this will work.");
+          $revision = $object;
+          $object = $object->loadActiveDiff();
+          $buildable
+            ->setBuildablePHID($object->getPHID())
+            ->setContainerPHID($revision->getPHID());
         } else if ($object instanceof PhabricatorRepositoryCommit) {
           $buildable
             ->setBuildablePHID($object->getPHID())
@@ -116,18 +119,11 @@ final class HarbormasterBuildableEditController
 
     $crumbs = $this->buildApplicationCrumbs();
     if ($is_new) {
-      $crumbs->addCrumb(
-        id(new PhabricatorCrumbView())
-          ->setName(pht('New Buildable')));
+      $crumbs->addTextCrumb(pht('New Buildable'));
     } else {
       $id = $buildable->getID();
-      $crumbs->addCrumb(
-        id(new PhabricatorCrumbView())
-          ->setName("B{$id}")
-          ->setHref("/B{$id}"));
-      $crumbs->addCrumb(
-        id(new PhabricatorCrumbView())
-          ->setName(pht('Edit')));
+      $crumbs->addTextCrumb("B{$id}", "/B{$id}");
+      $crumbs->addTextCrumb(pht('Edit'));
     }
 
     return $this->buildApplicationPage(

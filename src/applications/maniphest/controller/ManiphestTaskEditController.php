@@ -370,6 +370,8 @@ final class ManiphestTaskEditController extends ManiphestController {
             $task->setProjectPHIDs($template_task->getProjectPHIDs());
             $task->setOwnerPHID($template_task->getOwnerPHID());
             $task->setPriority($template_task->getPriority());
+            $task->setViewPolicy($template_task->getViewPolicy());
+            $task->setEditPolicy($template_task->getEditPolicy());
 
             $template_fields = PhabricatorCustomField::getObjectFields(
               $template_task,
@@ -663,9 +665,12 @@ final class ManiphestTaskEditController extends ManiphestController {
     }
 
     $crumbs = $this->buildApplicationCrumbs();
-    $crumbs->addCrumb(
-      id(new PhabricatorCrumbView())
-        ->setName($header_name));
+
+    if ($task->getID()) {
+      $crumbs->addTextCrumb('T'.$task->getID(), '/T'.$task->getID());
+    }
+
+    $crumbs->addTextCrumb($header_name);
 
     return $this->buildApplicationPage(
       array(

@@ -81,10 +81,9 @@ final class LegalpadDocumentViewController extends LegalpadController {
 
     $crumbs = $this->buildApplicationCrumbs($this->buildSideNav());
     $crumbs->setActionList($actions);
-    $crumbs->addCrumb(
-      id(new PhabricatorCrumbView())
-        ->setName('L'.$document->getID())
-        ->setHref($this->getApplicationURI('view/'.$document->getID())));
+    $crumbs->addTextCrumb(
+      'L'.$document->getID(),
+      $this->getApplicationURI('view/'.$document->getID()));
 
     $object_box = id(new PHUIObjectBoxView())
       ->setHeader($header)
@@ -196,9 +195,6 @@ final class LegalpadDocumentViewController extends LegalpadController {
       ? pht('Add Comment')
       : pht('Debate Legislation');
 
-    $header = id(new PHUIHeaderView())
-      ->setHeader($title);
-
     $button_name = $is_serious
       ? pht('Add Comment')
       : pht('Commence Filibuster');
@@ -207,15 +203,13 @@ final class LegalpadDocumentViewController extends LegalpadController {
       ->setUser($user)
       ->setObjectPHID($document->getPHID())
       ->setFormID($comment_form_id)
+      ->setHeaderText($title)
       ->setDraft($draft)
       ->setSubmitButtonName($button_name)
       ->setAction($this->getApplicationURI('/comment/'.$document->getID().'/'))
       ->setRequestURI($this->getRequest()->getRequestURI());
 
-    return id(new PHUIObjectBoxView())
-      ->setFlush(true)
-      ->setHeader($header)
-      ->appendChild($form);
+    return $form;
 
   }
 

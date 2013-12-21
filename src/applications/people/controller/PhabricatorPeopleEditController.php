@@ -23,21 +23,12 @@ final class PhabricatorPeopleEditController
         return new Aphront404Response();
       }
       $base_uri = '/people/edit/'.$user->getID().'/';
-      $crumbs->addCrumb(
-        id(new PhabricatorCrumbView())
-          ->setName(pht('Edit User'))
-          ->setHref('/people/edit/'));
-      $crumbs->addCrumb(
-        id(new PhabricatorCrumbView())
-          ->setName($user->getFullName())
-          ->setHref($base_uri));
+      $crumbs->addTextCrumb(pht('Edit User'), '/people/edit/');
+      $crumbs->addTextCrumb($user->getFullName(), $base_uri);
     } else {
       $user = new PhabricatorUser();
       $base_uri = '/people/edit/';
-      $crumbs->addCrumb(
-        id(new PhabricatorCrumbView())
-          ->setName(pht('Create New User'))
-          ->setHref($base_uri));
+      $crumbs->addTextCrumb(pht('Create New User'), $base_uri);
     }
 
     $nav = new AphrontSideNavFilterView();
@@ -182,6 +173,9 @@ final class PhabricatorPeopleEditController
               ->setAddress($new_email)
               ->setIsVerified(0);
 
+            // Automatically approve the user, since an admin is creating them.
+            $user->setIsApproved(1);
+
             id(new PhabricatorUserEditor())
               ->setActor($admin)
               ->createNewUser($user, $email);
@@ -325,7 +319,9 @@ final class PhabricatorPeopleEditController
       if ($user->getIsDisabled()) {
         $roles[] = pht('Disabled');
       }
-
+      if (!$user->getIsApproved()) {
+        $roles[] = pht('Not Approved');
+      }
       if (!$roles) {
         $roles[] = pht('Normal User');
       }
@@ -414,8 +410,8 @@ final class PhabricatorPeopleEditController
 
     if ($is_self) {
       $inst = pht('NOTE: You can not edit your own role.');
-      $form->appendChild(hsprintf(
-        '<p class="aphront-form-instructions">%s</p>', $inst));
+      $form->appendChild(
+        phutil_tag('p', array('class' => 'aphront-form-instructions'), $inst));
     }
 
     $form
@@ -473,8 +469,8 @@ final class PhabricatorPeopleEditController
     $form
       ->setUser($admin)
       ->setAction($request->getRequestURI())
-      ->appendChild(hsprintf(
-        '<p class="aphront-form-instructions">%s</p>', $inst));
+      ->appendChild(
+        phutil_tag('p', array('class' => 'aphront-form-instructions'), $inst));
 
     if ($user->getIsSystemAgent()) {
       $form
@@ -703,11 +699,10 @@ final class PhabricatorPeopleEditController
       ),
       pht('User Guide: Account Roles'));
 
-    $inst = pht('For a detailed explanation of account roles, see %s.',
-      $roles_link);
-    return hsprintf(
-      '<p class="aphront-form-instructions">%s</p>',
-      $inst);
+    return phutil_tag(
+      'p',
+      array('class' => 'aphront-form-instructions'),
+      pht('For a detailed explanation of account roles, see %s.', $roles_link));
   }
 
   private function processSetAccountPicture(PhabricatorUser $user) {

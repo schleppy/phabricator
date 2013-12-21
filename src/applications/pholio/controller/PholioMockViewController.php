@@ -98,10 +98,7 @@ final class PholioMockViewController extends PholioController {
 
     $crumbs = $this->buildApplicationCrumbs();
     $crumbs->setActionList($actions);
-    $crumbs->addCrumb(
-      id(new PhabricatorCrumbView())
-        ->setName('M'.$mock->getID())
-        ->setHref('/M'.$mock->getID()));
+    $crumbs->addTextCrumb('M'.$mock->getID(), '/M'.$mock->getID());
 
     $object_box = id(new PHUIObjectBoxView())
       ->setHeader($header)
@@ -239,9 +236,6 @@ final class PholioMockViewController extends PholioController {
       ? pht('Add Comment')
       : pht('History Beckons');
 
-    $header = id(new PHUIHeaderView())
-      ->setHeader($title);
-
     $button_name = $is_serious
       ? pht('Add Comment')
       : pht('Answer The Call');
@@ -251,14 +245,12 @@ final class PholioMockViewController extends PholioController {
       ->setObjectPHID($mock->getPHID())
       ->setFormID($comment_form_id)
       ->setDraft($draft)
+      ->setHeaderText($title)
       ->setSubmitButtonName($button_name)
       ->setAction($this->getApplicationURI('/comment/'.$mock->getID().'/'))
       ->setRequestURI($this->getRequest()->getRequestURI());
 
-    return id(new PHUIObjectBoxView())
-      ->setFlush(true)
-      ->setHeader($header)
-      ->appendChild($form);
+    return $form;
   }
 
 }

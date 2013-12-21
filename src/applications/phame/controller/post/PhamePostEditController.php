@@ -143,17 +143,14 @@ final class PhamePostEditController
         ->addCancelButton($cancel_uri)
         ->setValue($submit_button));
 
-    $preview_panel = hsprintf(
-      '<div class="aphront-panel-preview">
-         <div class="phame-post-preview-header">
-           Post Preview
-         </div>
-         <div id="post-preview">
-           <div class="aphront-panel-preview-loading-text">
-             Loading preview...
-           </div>
-         </div>
-       </div>');
+    $loading = phutil_tag_div(
+      'aphront-panel-preview-loading-text',
+      pht('Loading preview...'));
+
+    $preview_panel = phutil_tag_div('aphront-panel-preview', array(
+      phutil_tag_div('phame-post-preview-header', pht('Post Preview')),
+      phutil_tag('div', array('id' => 'post-preview'), $loading),
+    ));
 
     require_celerity_resource('phame-css');
     Javelin::initBehavior(
@@ -180,10 +177,9 @@ final class PhamePostEditController
       ->setForm($form);
 
     $crumbs = $this->buildApplicationCrumbs();
-    $crumbs->addCrumb(
-      id(new PhabricatorCrumbView())
-        ->setName($page_title)
-        ->setHref($this->getApplicationURI('/post/view/'.$this->id.'/')));
+    $crumbs->addTextCrumb(
+      $page_title,
+      $this->getApplicationURI('/post/view/'.$this->id.'/'));
 
     $nav = $this->renderSideNavFilterView(null);
     $nav->appendChild(

@@ -68,7 +68,7 @@ final class HarbormasterPlanEditController
       $id = $plan->getID();
 
       $title = pht('Edit Build Plan');
-      $cancel_uri = "/B{$id}";
+      $cancel_uri = $this->getApplicationURI('plan/'.$plan->getID().'/');
       $save_button = pht('Save Build Plan');
     }
 
@@ -93,18 +93,13 @@ final class HarbormasterPlanEditController
 
     $crumbs = $this->buildApplicationCrumbs();
     if ($is_new) {
-      $crumbs->addCrumb(
-        id(new PhabricatorCrumbView())
-          ->setName(pht('New Build Plan')));
+      $crumbs->addTextCrumb(pht('New Build Plan'));
     } else {
       $id = $plan->getID();
-      $crumbs->addCrumb(
-        id(new PhabricatorCrumbView())
-          ->setName(pht("Plan %d", $id))
-          ->setHref($this->getApplicationURI("plan/{$id}/")));
-      $crumbs->addCrumb(
-        id(new PhabricatorCrumbView())
-          ->setName(pht('Edit')));
+      $crumbs->addTextCrumb(
+        pht("Plan %d", $id),
+        $this->getApplicationURI("plan/{$id}/"));
+      $crumbs->addTextCrumb(pht('Edit'));
     }
 
     return $this->buildApplicationPage(

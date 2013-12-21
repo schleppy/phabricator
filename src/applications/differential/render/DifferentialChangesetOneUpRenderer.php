@@ -35,22 +35,33 @@ final class DifferentialChangesetOneUpRenderer
             } else {
               $class = 'left';
             }
-            $out[] = hsprintf('<th>%s</th>', $p['line']);
-            $out[] = hsprintf('<th></th>');
-            $out[] = hsprintf('<td style="width: 0px;min-width:0px;"></td>');
-            $out[] = hsprintf('<td class="%s" style="width:100%%;">%s</td>', $class, $p['render']);
+#<<<<<<< HEAD
+            #$out[] = hsprintf('<th>%s</th>', $p['line']);
+            #$out[] = hsprintf('<th></th>');
+            #$out[] = hsprintf('<td style="width: 0px;min-width:0px;"></td>');
+            #$out[] = hsprintf('<td class="%s" style="width:100%%;">%s</td>', $class, $p['render']);
+#=======
+            $out[] = phutil_tag('th', array(), $p['line']);
+            $out[] = phutil_tag('th', array());
+            $out[] = phutil_tag('td', array('class' => $class), $p['render']);
+#>>>>>>> upstream/master
           } else if ($type == 'new') {
             if ($p['htype']) {
               $class = 'right new';
-              $out[] = hsprintf('<th />');
+              $out[] = phutil_tag('th', array());
             } else {
               $class = 'right';
-              $out[] = hsprintf('<th>%s</th>', $p['oline']);
+              $out[] = phutil_tag('th', array(), $p['oline']);
             }
-            $n_id = hsprintf('id="C%s%sL%s"', $right_id, $right_char, $p['line']);
-            $out[] = hsprintf('<th %s>%s</th>', $n_id, $p['line']);
-            $out[] = hsprintf('<td style="width:0px;min-width:0px;"></td>');
-            $out[] = hsprintf('<td class="%s" style="width:100%%;">%s</td>', $class, $p['render']);
+#<<<<<<< HEAD
+            #$n_id = hsprintf('id="C%s%sL%s"', $right_id, $right_char, $p['line']);
+            #$out[] = hsprintf('<th %s>%s</th>', $n_id, $p['line']);
+            #$out[] = hsprintf('<td style="width:0px;min-width:0px;"></td>');
+            #$out[] = hsprintf('<td class="%s" style="width:100%%;">%s</td>', $class, $p['render']);
+#=======
+            $out[] = phutil_tag('th', array(), $p['line']);
+            $out[] = phutil_tag('td', array('class' => $class), $p['render']);
+#>>>>>>> upstream/master
           }
           $out[] = hsprintf('</tr>');
           break;

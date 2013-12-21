@@ -65,7 +65,7 @@ final class DifferentialDiffCreateController extends DifferentialController {
           $arcanist_link,
           phutil_tag('tt', array(), 'svn diff'),
           phutil_tag('tt', array(), 'git diff'),
-          phutil_tag('tt', array(), 'hg diff')))
+          phutil_tag('tt', array(), 'hg diff --git')))
       ->appendChild(
         id(new AphrontFormTextAreaControl())
           ->setLabel(pht('Raw Diff'))
@@ -88,9 +88,7 @@ final class DifferentialDiffCreateController extends DifferentialController {
       ->setForm($form);
 
     $crumbs = $this->buildApplicationCrumbs();
-    $crumbs->addCrumb(
-      id(new PhabricatorCrumbView())
-        ->setName(pht('Create Diff')));
+    $crumbs->addTextCrumb(pht('Create Diff'));
 
     if ($errors) {
       $errors = id(new AphrontErrorView())

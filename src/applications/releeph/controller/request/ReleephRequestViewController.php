@@ -54,38 +54,33 @@ final class ReleephRequestViewController extends ReleephProjectController {
       ->setTransactions($xactions)
       ->setMarkupEngine($engine);
 
-    $add_comment_header = id(new PHUIHeaderView())
-      ->setHeader('Plea or yield');
+    $add_comment_header = pht('Plea or yield');
 
     $draft = PhabricatorDraft::newFromUserAndKey(
       $user,
       $releeph_request->getPHID());
 
-    $add_comment_form = id(new PhabricatorApplicationTransactionCommentView())
-      ->setUser($user)
-      ->setObjectPHID($releeph_request->getPHID())
-      ->setDraft($draft)
-      ->setAction($this->getApplicationURI(
-        '/request/comment/'.$releeph_request->getID().'/'))
-      ->setSubmitButtonName('Comment');
-
     $title = hsprintf("RQ%d: %s",
       $releeph_request->getID(),
       $releeph_request->getSummaryForDisplay());
 
+    $add_comment_form = id(new PhabricatorApplicationTransactionCommentView())
+      ->setUser($user)
+      ->setObjectPHID($releeph_request->getPHID())
+      ->setDraft($draft)
+      ->setHeaderText($add_comment_header)
+      ->setAction($this->getApplicationURI(
+        '/request/comment/'.$releeph_request->getID().'/'))
+      ->setSubmitButtonName('Comment');
+
     $crumbs = $this->buildApplicationCrumbs()
-      ->addCrumb(
-        id(new PhabricatorCrumbView())
-          ->setName($releeph_project->getName())
-          ->setHref($releeph_project->getURI()))
-      ->addCrumb(
-        id(new PhabricatorCrumbView())
-          ->setName($releeph_branch->getDisplayNameWithDetail())
-          ->setHref($releeph_branch->getURI()))
-      ->addCrumb(
-        id(new PhabricatorCrumbView())
-          ->setName('RQ'.$releeph_request->getID())
-          ->setHref('/RQ'.$releeph_request->getID()));
+      ->addTextCrumb($releeph_project->getName(), $releeph_project->getURI())
+      ->addTextCrumb(
+        $releeph_branch->getDisplayNameWithDetail(),
+        $releeph_branch->getURI())
+      ->addTextCrumb(
+        'RQ'.$releeph_request->getID(),
+        '/RQ'.$releeph_request->getID());
 
     return $this->buildStandardPageResponse(
       array(
@@ -93,7 +88,6 @@ final class ReleephRequestViewController extends ReleephProjectController {
         array(
           $rq_view,
           $timeline,
-          $add_comment_header,
           $add_comment_form,
         )
       ),

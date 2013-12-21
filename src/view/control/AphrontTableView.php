@@ -310,7 +310,7 @@ final class AphrontTableView extends AphrontView {
           array(
             'class' => 'single-display-line-content',
           ),
-          $line),
+          $line, false),
         "\xC2\xA0",
       ));
   }

@@ -114,8 +114,13 @@ final class DiffusionPathChange {
       return null;
     }
     $message = $this->getCommitData()->getCommitMessage();
-    $first = idx(explode("\n", $message), 0);
-    return substr($first, 0, 80);
+    //$first = idx(explode("\n", $message), 0);
+    //$pattern = "@^([A-Z]+\-\d+)\b@";
+    //if (preg_match($pattern, $first, $matches)) {
+        //$first = preg_replace('@^' . $matches[1] . '\b@', ' ', $first);
+        //return phutil_tag('a', array("target" => "_blank", "href" => "https://jira.cs.sys/browse/" . $matches[1]), $matches[1]) . substr($first, 0, 80);
+    //}
+    return substr($message, 0, 80);
   }
 
   final public static function convertToArcanistChanges(array $changes) {

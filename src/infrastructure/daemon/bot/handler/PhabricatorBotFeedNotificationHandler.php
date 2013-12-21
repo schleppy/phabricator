@@ -150,7 +150,11 @@ final class PhabricatorBotFeedNotificationHandler
         }
 
         $channels = $this->getConfig('join');
+        $chans = $this->getConfig('notification.channels');
+        file_put_contents("/tmp/chans.txt", implode("\n", $chans));
         foreach ($channels as $channel_name) {
+          file_put_contents("/tmp/chan_" . $channel_name, $channel_name);
+          if (! in_array($channel_name, $chans)) continue;
 
           $channel = id(new PhabricatorBotChannel())
             ->setName($channel_name);

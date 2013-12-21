@@ -47,7 +47,7 @@ final class PhabricatorLocalDiskFileStorageEngine
 
     $parent = $root.'/'.dirname($name);
     if (!Filesystem::pathExists($parent)) {
-      execx('mkdir -p %s', $parent);
+      execx('/bin/mkdir -p %s', $parent);
     }
 
     AphrontWriteGuard::willWrite();

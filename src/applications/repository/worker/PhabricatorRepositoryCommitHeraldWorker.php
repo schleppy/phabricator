@@ -36,14 +36,14 @@ final class PhabricatorRepositoryCommitHeraldWorker
       $commit->getID());
 
     if (!$data) {
-      // TODO: Permanent failure.
-      return;
+      throw new PhabricatorWorkerPermanentFailureException(
+        pht(
+          'Unable to load commit data. The data for this task is invalid '.
+          'or no longer exists.'));
     }
 
-    $adapter = HeraldCommitAdapter::newLegacyAdapter(
-      $repository,
-      $commit,
-      $data);
+    $adapter = id(new HeraldCommitAdapter())
+      ->setCommit($commit);
 
     $rules = id(new HeraldRuleQuery())
       ->setViewer(PhabricatorUser::getOmnipotentUser())

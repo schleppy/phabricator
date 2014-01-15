@@ -168,7 +168,7 @@ final class PhabricatorProjectEditor extends PhabricatorEditor {
     }
 
     id(new PhabricatorSearchIndexer())
-      ->indexDocumentByPHID($project->getPHID());
+      ->queueDocumentForIndexing($project->getPHID());
 
     return $this;
   }
@@ -250,8 +250,8 @@ final class PhabricatorProjectEditor extends PhabricatorEditor {
         $old_slug = $project->getFullPhrictionSlug();
         $project->setName($xaction->getNewValue());
         $project->setPhrictionSlug($xaction->getNewValue());
-
-        if ($xaction->getOldValue()) {
+        $changed_slug = $old_slug != $project->getFullPhrictionSlug();
+        if ($xaction->getOldValue() && $changed_slug) {
           $old_document = id(new PhrictionDocument())
             ->loadOneWhere(
               'slug = %s',

@@ -21,6 +21,7 @@ final class LegalpadDocument extends LegalpadDAO
 
   private $documentBody = self::ATTACHABLE;
   private $contributors = self::ATTACHABLE;
+  private $signatures   = self::ATTACHABLE;
 
   public function getConfiguration() {
     return array(
@@ -54,11 +55,24 @@ final class LegalpadDocument extends LegalpadDAO
     return $this;
   }
 
+  public function getSignatures() {
+    return $this->assertAttached($this->signatures);
+  }
+
+  public function attachSignatures(array $signatures) {
+    $this->signatures = $signatures;
+    return $this;
+  }
+
   public function save() {
     if (!$this->getMailKey()) {
       $this->setMailKey(Filesystem::readRandomCharacters(20));
     }
     return parent::save();
+  }
+
+  public function getMonogram() {
+    return 'L'.$this->getID();
   }
 
 /* -(  PhabricatorSubscribableInterface Implementation  )-------------------- */

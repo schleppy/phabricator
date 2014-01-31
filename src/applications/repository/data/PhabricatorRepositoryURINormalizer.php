@@ -39,12 +39,17 @@
 final class PhabricatorRepositoryURINormalizer extends Phobject {
 
   const TYPE_GIT = 'git';
+  const TYPE_SVN = 'svn';
+  const TYPE_MERCURIAL = 'hg';
+
   private $type;
   private $uri;
 
   public function __construct($type, $uri) {
     switch ($type) {
       case self::TYPE_GIT:
+      case self::TYPE_SVN:
+      case self::TYPE_MERCURIAL:
         break;
       default:
         throw new Exception(pht('Unknown URI type "%s"!'));
@@ -75,6 +80,14 @@ final class PhabricatorRepositoryURINormalizer extends Phobject {
         }
 
         return $this->uri;
+      case self::TYPE_SVN:
+      case self::TYPE_MERCURIAL:
+        $uri = new PhutilURI($this->uri);
+        if ($uri->getProtocol()) {
+          return $uri->getPath();
+        }
+
+        return $this->uri;
     }
   }
 
@@ -90,6 +103,18 @@ final class PhabricatorRepositoryURINormalizer extends Phobject {
       case self::TYPE_GIT:
         $path = preg_replace('/\.git$/', '', $path);
         break;
+      case self::TYPE_SVN:
+      case self::TYPE_MERCURIAL:
+        break;
+    }
+
+    // If this is a Phabricator URI, strip it down to the callsign. We mutably
+    // allow you to clone repositories as "/diffusion/X/anything.git", for
+    // example.
+
+    $matches = null;
+    if (preg_match('@^(diffusion/[A-Z]+)@', $path, $matches)) {
+      $path = $matches[1];
     }
 
     return $path;

@@ -16,6 +16,8 @@ final class PhabricatorRepositoryURINormalizerTestCase
       'user@domain.com:path/repo/' => 'path/repo',
       'file:///path/to/local/repo.git' => 'path/to/local/repo',
       '/path/to/local/repo.git' => 'path/to/local/repo',
+      'ssh://something.com/diffusion/X/anything.git' => 'diffusion/X',
+      'ssh://something.com/diffusion/X/' => 'diffusion/X',
     );
 
     $type_git = PhabricatorRepositoryURINormalizer::TYPE_GIT;
@@ -25,7 +27,25 @@ final class PhabricatorRepositoryURINormalizerTestCase
       $this->assertEqual(
         $expect,
         $normal->getNormalizedPath(),
-        pht('Normalized path for "%s".', $input));
+        pht('Normalized Git path for "%s".', $input));
     }
   }
+
+  public function testSVNURINormalizer() {
+    $cases = array(
+      'file:///path/to/repo' => 'path/to/repo',
+      'file:///path/to/repo/' => 'path/to/repo',
+    );
+
+    $type_svn = PhabricatorRepositoryURINormalizer::TYPE_SVN;
+
+    foreach ($cases as $input => $expect) {
+      $normal = new PhabricatorRepositoryURINormalizer($type_svn, $input);
+      $this->assertEqual(
+        $expect,
+        $normal->getNormalizedPath(),
+        pht('Normalized SVN path for "%s".', $input));
+    }
+  }
+
 }

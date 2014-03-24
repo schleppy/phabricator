@@ -201,6 +201,8 @@ abstract class DiffusionBrowseController extends DiffusionController {
       ->setOrder(DifferentialRevisionQuery::ORDER_PATH_MODIFIED)
       ->setLimit(10)
       ->needRelationships(true)
+      ->needFlags(true)
+      ->needDrafts(true)
       ->execute();
 
     if (!$revisions) {
@@ -209,9 +211,7 @@ abstract class DiffusionBrowseController extends DiffusionController {
 
     $view = id(new DifferentialRevisionListView())
       ->setRevisions($revisions)
-      ->setFields(DifferentialRevisionListView::getDefaultFields($user))
-      ->setUser($user)
-      ->loadAssets();
+      ->setUser($user);
 
     $phids = $view->getRequiredHandlePHIDs();
     $handles = $this->loadViewerHandles($phids);

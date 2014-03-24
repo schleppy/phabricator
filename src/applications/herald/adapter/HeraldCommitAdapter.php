@@ -107,7 +107,6 @@ final class HeraldCommitAdapter extends HeraldAdapter {
         self::FIELD_DIFF_ADDED_CONTENT,
         self::FIELD_DIFF_REMOVED_CONTENT,
         self::FIELD_DIFF_ENORMOUS,
-        self::FIELD_RULE,
         self::FIELD_AFFECTED_PACKAGE,
         self::FIELD_AFFECTED_PACKAGE_OWNER,
         self::FIELD_NEED_AUDIT_FOR_PACKAGE,
@@ -443,14 +442,14 @@ final class HeraldCommitAdapter extends HeraldAdapter {
         if (!$revision) {
           return null;
         }
-        // after a revision is accepted, it can be closed (say via arc land)
-        // so use this function to figure out if it was accepted at one point
-        // *and* not later rejected...  what a function!
-        $reviewed_by = $revision->loadReviewedBy();
-        if (!$reviewed_by) {
-          return null;
+
+        switch ($revision->getStatus()) {
+          case ArcanistDifferentialRevisionStatus::ACCEPTED:
+          case ArcanistDifferentialRevisionStatus::CLOSED:
+            return $revision->getPHID();
         }
-        return $revision->getPHID();
+
+        return null;
       case self::FIELD_DIFFERENTIAL_REVIEWERS:
         $revision = $this->loadDifferentialRevision();
         if (!$revision) {

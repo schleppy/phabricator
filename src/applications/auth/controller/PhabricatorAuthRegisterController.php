@@ -126,6 +126,12 @@ final class PhabricatorAuthRegisterController
     $can_edit_anything = $profile->getCanEditAnything() || $must_set_password;
     $force_verify = $profile->getShouldVerifyEmail();
 
+    // Automatically verify the administrator's email address during first-time
+    // setup.
+    if ($is_setup) {
+      $force_verify = true;
+    }
+
     $value_username = $default_username;
     $value_realname = $default_realname;
     $value_email = $default_email;
@@ -200,8 +206,11 @@ final class PhabricatorAuthRegisterController
         if (!strlen($value_email)) {
           $e_email = pht('Required');
           $errors[] = pht('Email is required.');
-        } else if (!PhabricatorUserEmail::isAllowedAddress($value_email)) {
+        } else if (!PhabricatorUserEmail::isValidAddress($value_email)) {
           $e_email = pht('Invalid');
+          $errors[] = PhabricatorUserEmail::describeValidAddresses();
+        } else if (!PhabricatorUserEmail::isAllowedAddress($value_email)) {
+          $e_email = pht('Disallowed');
           $errors[] = PhabricatorUserEmail::describeAllowedAddresses();
         } else {
           $e_email = null;

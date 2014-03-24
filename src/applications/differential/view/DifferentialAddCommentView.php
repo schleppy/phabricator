@@ -6,18 +6,21 @@ final class DifferentialAddCommentView extends AphrontView {
   private $actions;
   private $actionURI;
   private $draft;
-  private $auxFields;
   private $reviewers = array();
   private $ccs = array();
+  private $errorView;
 
-  public function setRevision($revision) {
-    $this->revision = $revision;
+  public function setErrorView(AphrontErrorView $error_view) {
+    $this->errorView = $error_view;
     return $this;
   }
 
-  public function setAuxFields(array $aux_fields) {
-    assert_instances_of($aux_fields, 'DifferentialFieldSpecification');
-    $this->auxFields = $aux_fields;
+  public function getErrorView() {
+    return $this->errorView;
+  }
+
+  public function setRevision($revision) {
+    $this->revision = $revision;
     return $this;
   }
 
@@ -121,7 +124,6 @@ final class DifferentialAddCommentView extends AphrontView {
             'src' => '/typeahead/common/usersorprojects/',
             'value' => $this->reviewers,
             'row' => 'add-reviewers',
-            'ondemand' => PhabricatorEnv::getEnvConfig('tokenizer.ondemand'),
             'labels' => $add_reviewers_labels,
             'placeholder' => pht('Type a user or project name...'),
           ),
@@ -130,7 +132,6 @@ final class DifferentialAddCommentView extends AphrontView {
             'src' => '/typeahead/common/mailable/',
             'value' => $this->ccs,
             'row' => 'add-ccs',
-            'ondemand' => PhabricatorEnv::getEnvConfig('tokenizer.ondemand'),
             'placeholder' => pht('Type a user or mailing list...'),
           ),
         ),
@@ -138,15 +139,6 @@ final class DifferentialAddCommentView extends AphrontView {
       ));
 
     $diff = $revision->loadActiveDiff();
-    $warnings = mpull($this->auxFields, 'renderWarningBoxForRevisionAccept');
-
-    Javelin::initBehavior(
-      'differential-accept-with-errors',
-      array(
-        'select' => 'comment-action',
-        'warnings' => 'warnings',
-      ));
-
     $rev_id = $revision->getID();
 
     Javelin::initBehavior(
@@ -165,21 +157,12 @@ final class DifferentialAddCommentView extends AphrontView {
         'inline'    => 'inline-comment-preview',
       ));
 
-    $warning_container = array();
-    foreach ($warnings as $warning) {
-      if ($warning) {
-        $warning_container[] = $warning->render();
-      }
-    }
-
     $header = id(new PHUIHeaderView())
       ->setHeader($is_serious ? pht('Add Comment') : pht('Leap Into Action'));
 
     $anchor = id(new PhabricatorAnchorView())
         ->setAnchorName('comment')
         ->setNavigationMarker(true);
-
-    $warn = phutil_tag('div', array('id' => 'warnings'), $warning_container);
 
     $loading = phutil_tag(
       'span',
@@ -197,8 +180,11 @@ final class DifferentialAddCommentView extends AphrontView {
     $comment_box = id(new PHUIObjectBoxView())
       ->setHeader($header)
       ->appendChild($anchor)
-      ->appendChild($warn)
       ->appendChild($form);
+
+    if ($this->errorView) {
+      $comment_box->setErrorView($this->errorView);
+    }
 
     return array($comment_box, $preview);
   }

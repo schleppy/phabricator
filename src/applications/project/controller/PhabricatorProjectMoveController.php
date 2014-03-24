@@ -49,11 +49,14 @@ final class PhabricatorProjectMoveController
       ->execute();
 
     $columns = mpull($columns, null, 'getPHID');
-    if (empty($columns[$column_phid])) {
+    $column = idx($columns, $column_phid);
+    if (!$column) {
       // User is trying to drop this object into a nonexistent column, just kick
       // them out.
       return new Aphront404Response();
     }
+
+    $xactions = array();
 
     $edge_type = PhabricatorEdgeConfig::TYPE_OBJECT_HAS_COLUMN;
 
@@ -66,55 +69,58 @@ final class PhabricatorProjectMoveController
 
     $edge_phids = $query->getDestinationPHIDs();
 
-    $this->rewriteEdges(
-      $object->getPHID(),
-      $edge_type,
-      $column_phid,
-      $edge_phids);
+    $xactions[] = id(new ManiphestTransaction())
+      ->setTransactionType(ManiphestTransaction::TYPE_PROJECT_COLUMN)
+      ->setNewValue(array(
+        'columnPHIDs' => array($column->getPHID()),
+        'projectPHID' => $column->getProjectPHID()))
+      ->setOldValue(array(
+        'columnPHIDs' => $edge_phids,
+        'projectPHID' => $column->getProjectPHID()));
 
-    // TODO: We also need to deal with priorities, so far this only gets stuff
-    // in the correct column.
-
-    return id(new AphrontAjaxResponse())->setContent(array());
-  }
-
-  private function rewriteEdges($src, $edge_type, $dst, array $edges) {
-    $viewer = $this->getRequest()->getUser();
-
-    // NOTE: Normally, we expect only one edge to exist, but this works in a
-    // general way so it will repair any stray edges.
-
-    $remove = array();
-    $edge_missing = true;
-    foreach ($edges as $phid) {
-      if ($phid == $dst) {
-        $edge_missing = false;
-      } else {
-        $remove[] = $phid;
+    if ($after_phid) {
+      $after_task = id(new ManiphestTaskQuery())
+        ->setViewer($viewer)
+        ->withPHIDs(array($after_phid))
+        ->requireCapabilities(array(PhabricatorPolicyCapability::CAN_EDIT))
+        ->executeOne();
+      if (!$after_task) {
+        return new Aphront404Response();
       }
+      $after_pri = $after_task->getPriority();
+      $after_sub = $after_task->getSubpriority();
+
+      $xactions[] = id(new ManiphestTransaction())
+        ->setTransactionType(ManiphestTransaction::TYPE_SUBPRIORITY)
+        ->setNewValue(array(
+          'newPriority' => $after_pri,
+          'newSubpriorityBase' => $after_sub));
     }
 
-    $add = array();
-    if ($edge_missing) {
-      $add[] = $dst;
-    }
-
-    if (!$add && !$remove) {
-      return;
-    }
-
-    $editor = id(new PhabricatorEdgeEditor())
+    $editor = id(new ManiphestTransactionEditor())
       ->setActor($viewer)
-      ->setSuppressEvents(true);
+      ->setContinueOnMissingFields(true)
+      ->setContinueOnNoEffect(true)
+      ->setContentSourceFromRequest($request);
 
-    foreach ($add as $phid) {
-      $editor->addEdge($src, $edge_type, $phid);
-    }
-    foreach ($remove as $phid) {
-      $editor->removeEdge($src, $edge_type, $phid);
-    }
+    $editor->applyTransactions($object, $xactions);
 
-    $editor->save();
-  }
+    $owner = null;
+    if ($object->getOwnerPHID()) {
+      $owner = id(new PhabricatorHandleQuery())
+        ->setViewer($viewer)
+        ->withPHIDs(array($object->getOwnerPHID()))
+        ->executeOne();
+    }
+    $card = id(new ProjectBoardTaskCard())
+      ->setViewer($viewer)
+      ->setTask($object)
+      ->setOwner($owner)
+      ->setCanEdit(true)
+      ->getItem();
+
+    return id(new AphrontAjaxResponse())->setContent(
+      array('task' => $card));
+ }
 
 }

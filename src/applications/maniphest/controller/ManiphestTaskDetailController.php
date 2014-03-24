@@ -47,15 +47,9 @@ final class ManiphestTaskDetailController extends ManiphestController {
     $field_list = PhabricatorCustomField::getObjectFields(
       $task,
       PhabricatorCustomField::ROLE_VIEW);
-
-    foreach ($field_list->getFields() as $field) {
-      $field->setObject($task);
-      $field->setViewer($user);
-    }
-
-    $field_list->readFieldsFromStorage($task);
-
-    $aux_fields = $field_list->getFields();
+    $field_list
+      ->setViewer($user)
+      ->readFieldsFromStorage($task);
 
     $e_commit = PhabricatorEdgeConfig::TYPE_TASK_HAS_COMMIT;
     $e_dep_on = PhabricatorEdgeConfig::TYPE_TASK_DEPENDS_ON_TASK;
@@ -308,7 +302,6 @@ final class ManiphestTaskDetailController extends ManiphestController {
       ManiphestTransaction::TYPE_PROJECTS => array(
         'id'          => 'projects-tokenizer',
         'src'         => '/typeahead/common/projects/',
-        'ondemand'    => PhabricatorEnv::getEnvConfig('tokenizer.ondemand'),
         'placeholder' => pht('Type a project name...'),
       ),
       ManiphestTransaction::TYPE_OWNER => array(
@@ -316,13 +309,11 @@ final class ManiphestTaskDetailController extends ManiphestController {
         'src'         => '/typeahead/common/users/',
         'value'       => $default_claim,
         'limit'       => 1,
-        'ondemand'    => PhabricatorEnv::getEnvConfig('tokenizer.ondemand'),
         'placeholder' => pht('Type a user name...'),
       ),
       ManiphestTransaction::TYPE_CCS => array(
         'id'          => 'cc-tokenizer',
         'src'         => '/typeahead/common/mailable/',
-        'ondemand'    => PhabricatorEnv::getEnvConfig('tokenizer.ondemand'),
         'placeholder' => pht('Type a user or mailing list...'),
       ),
     );
@@ -550,6 +541,8 @@ final class ManiphestTaskDetailController extends ManiphestController {
 
     $project_phids = $task->getProjectPHIDs();
     if ($project_phids) {
+      require_celerity_resource('maniphest-task-summary-css');
+
       // If we end up with real-world projects with many hundreds of columns, it
       // might be better to just load all the edges, then load those columns and
       // work backward that way, or denormalize this data more.
@@ -582,9 +575,23 @@ final class ManiphestTaskDetailController extends ManiphestController {
         $columns = idx($column_groups, $project_phid, array());
         $column = head(array_intersect_key($columns, $in_column_phids));
         if ($column) {
-          if (!$column->isDefaultColumn()) {
-            $row[] = pht(' (%s)', $column->getDisplayName());
-          }
+          $column_name = pht('(%s)', $column->getDisplayName());
+          // TODO: This is really hacky but there's no cleaner way to do it
+          // right now, T4022 should give us better tools for this.
+          $column_href = str_replace(
+            'project/view',
+            'project/board',
+            $handle->getURI());
+          $column_link = phutil_tag(
+            'a',
+            array(
+              'href' => $column_href,
+              'class' => 'maniphest-board-link',
+            ),
+            $column_name);
+
+          $row[] = ' ';
+          $row[] = $column_link;
         }
 
         $project_rows[] = phutil_tag('div', array(), $row);

@@ -352,6 +352,7 @@ final class PhabricatorMarkupEngine {
    */
   public static function newDiffusionMarkupEngine(array $options = array()) {
     return self::newMarkupEngine(array(
+      'header.generate-toc' => true,
     ));
   }
 
@@ -378,6 +379,12 @@ final class PhabricatorMarkupEngine {
         $engine->setConfig('preserve-linebreaks', false);
   //    $engine->setConfig('diviner.renderer', new DivinerDefaultRenderer());
         $engine->setConfig('header.generate-toc', true);
+        break;
+      case 'extract':
+        // Engine used for reference/edge extraction. Turn off anything which
+        // is slow and doesn't change reference extraction.
+        $engine = self::newMarkupEngine(array());
+        $engine->setConfig('pygments.enabled', false);
         break;
       default:
         throw new Exception("Unknown engine ruleset: {$ruleset}!");

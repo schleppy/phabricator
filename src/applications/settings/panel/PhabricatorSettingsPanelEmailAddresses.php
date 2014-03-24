@@ -161,9 +161,10 @@ final class PhabricatorSettingsPanelEmailAddresses
     $user = $request->getUser();
 
     $e_email = true;
-    $email   = trim($request->getStr('email'));
+    $email   = null;
     $errors  = array();
     if ($request->isDialogFormPost()) {
+      $email = trim($request->getStr('email'));
 
       if ($new == 'verify') {
         // The user clicked "Done" from the "an email has been sent" dialog.
@@ -173,8 +174,11 @@ final class PhabricatorSettingsPanelEmailAddresses
       if (!strlen($email)) {
         $e_email = pht('Required');
         $errors[] = pht('Email is required.');
-      } else if (!PhabricatorUserEmail::isAllowedAddress($email)) {
+      } else if (!PhabricatorUserEmail::isValidAddress($email)) {
         $e_email = pht('Invalid');
+        $errors[] = PhabricatorUserEmail::describeValidAddresses();
+      } else if (!PhabricatorUserEmail::isAllowedAddress($email)) {
+        $e_email = pht('Disallowed');
         $errors[] = PhabricatorUserEmail::describeAllowedAddresses();
       }
 
@@ -219,7 +223,7 @@ final class PhabricatorSettingsPanelEmailAddresses
         id(new AphrontFormTextControl())
           ->setLabel(pht('Email'))
           ->setName('email')
-          ->setValue($request->getStr('email'))
+          ->setValue($email)
           ->setCaption(PhabricatorUserEmail::describeAllowedAddresses())
           ->setError($e_email));
 

@@ -79,6 +79,14 @@ final class PhabricatorFileImageMacro extends PhabricatorFileDAO
     return false;
   }
 
+  public function shouldShowSubscribersProperty() {
+    return true;
+  }
+
+  public function shouldAllowSubscription($phid) {
+    return true;
+  }
+
 
 /* -(  PhabricatorPolicyInterface  )----------------------------------------- */
 
@@ -102,4 +110,3 @@ final class PhabricatorFileImageMacro extends PhabricatorFileDAO
   }
 
 }
-

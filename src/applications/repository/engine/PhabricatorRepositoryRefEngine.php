@@ -191,12 +191,12 @@ final class PhabricatorRepositoryRefEngine
 
     foreach ($cursor_groups as $name => $cursor_group) {
       if (idx($ref_groups, $name) === null) {
-        $this->log(
-          pht(
-            'Ref %s "%s" no longer exists.',
-            $cursor->getRefType(),
-            $cursor->getRefName()));
         foreach ($cursor_group as $cursor) {
+          $this->log(
+            pht(
+              'Ref %s "%s" no longer exists.',
+              $cursor->getRefType(),
+              $cursor->getRefName()));
           $this->markRefDead($cursor);
         }
       }
@@ -247,6 +247,11 @@ final class PhabricatorRepositoryRefEngine
             '{node}\n',
             hgsprintf('%s', $new_head));
         }
+
+        $stdout = trim($stdout);
+        if (!strlen($stdout)) {
+          return array();
+        }
         return phutil_split_lines($stdout, $retain_newlines = false);
       case PhabricatorRepositoryType::REPOSITORY_TYPE_GIT:
         if ($all_closing_heads) {
@@ -260,6 +265,11 @@ final class PhabricatorRepositoryRefEngine
             'log --format=%s %s',
             '%H',
             $new_head);
+        }
+
+        $stdout = trim($stdout);
+        if (!strlen($stdout)) {
+          return array();
         }
         return phutil_split_lines($stdout, $retain_newlines = false);
       default:
@@ -294,8 +304,9 @@ final class PhabricatorRepositoryRefEngine
     $all_commits = queryfx_all(
       $conn_w,
       'SELECT id, commitIdentifier, importStatus FROM %T
-        WHERE commitIdentifier IN (%Ls)',
+        WHERE repositoryID = %d AND commitIdentifier IN (%Ls)',
       $commit_table->getTableName(),
+      $repository->getID(),
       $identifiers);
 
     $closeable_flag = PhabricatorRepositoryCommit::IMPORTED_CLOSEABLE;

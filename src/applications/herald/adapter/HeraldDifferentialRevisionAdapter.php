@@ -28,6 +28,10 @@ final class HeraldDifferentialRevisionAdapter extends HeraldAdapter {
     return $this->revision;
   }
 
+  public function getDiff() {
+    return $this->diff;
+  }
+
   public function getAdapterContentType() {
     return 'differential';
   }
@@ -69,10 +73,10 @@ final class HeraldDifferentialRevisionAdapter extends HeraldAdapter {
         self::FIELD_DIFF_CONTENT,
         self::FIELD_DIFF_ADDED_CONTENT,
         self::FIELD_DIFF_REMOVED_CONTENT,
-        self::FIELD_RULE,
         self::FIELD_AFFECTED_PACKAGE,
         self::FIELD_AFFECTED_PACKAGE_OWNER,
-        self::FIELD_OBJECT_IS_NEW,
+        self::FIELD_IS_NEW_OBJECT,
+        self::FIELD_ARCANIST_PROJECT,
       ),
       parent::getFields());
   }
@@ -370,6 +374,8 @@ final class HeraldDifferentialRevisionAdapter extends HeraldAdapter {
         $packages = $this->loadAffectedPackages();
         return PhabricatorOwnersOwner::loadAffiliatedUserPHIDs(
           mpull($packages, 'getID'));
+      case self::FIELD_ARCANIST_PROJECT:
+        return $this->revision->getArcanistProjectPHID();
     }
 
     return parent::getHeraldField($field);

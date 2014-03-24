@@ -638,21 +638,6 @@ return array(
     'https' => true,
   ),
 
-  // Tokenizers are UI controls which let the user select other users, email
-  // addresses, project names, etc., by typing the first few letters and having
-  // the control autocomplete from a list. They can load their data in two ways:
-  // either in a big chunk up front, or as the user types. By default, the data
-  // is loaded in a big chunk. This is simpler and performs better for small
-  // datasets. However, if you have a very large number of users or projects,
-  // (in the ballpark of more than a thousand), loading all that data may become
-  // slow enough that it's worthwhile to query on demand instead. This makes
-  // the typeahead slightly less responsive but overall performance will be much
-  // better if you have a ton of stuff. You can figure out which setting is
-  // best for your install by changing this setting and then playing with a
-  // user tokenizer (like the user selectors in Maniphest or Differential) and
-  // seeing which setting loads faster and feels better.
-  'tokenizer.ondemand'          => false,
-
   // By default, Phabricator includes some silly nonsense in the UI, such as
   // a submit button called "Clowncopterize" in Differential and a call to
   // "Leap Into Action". If you'd prefer more traditional UI strings like
@@ -802,30 +787,12 @@ return array(
 
 // -- Differential ---------------------------------------------------------- //
 
-  'differential.revision-custom-detail-renderer'  => null,
-
   // List of file regexps where whitespace is meaningful and should not
   // use 'ignore-all' by default
   'differential.whitespace-matters' => array(
     '/\.py$/',
     '/\.l?hs$/',
   ),
-
-  'differential.field-selector' => 'DifferentialDefaultFieldSelector',
-
-  // Differential can show "Host" and "Path" fields on revisions, with
-  // information about the machine and working directory where the
-  // change came from. These fields are disabled by default because they may
-  // occasionally have sensitive information; you can set this to true to
-  // enable them.
-  'differential.show-host-field'  => false,
-
-  // Differential has a required "Test Plan" field by default, which requires
-  // authors to fill out information about how they verified the correctness of
-  // their changes when sending code for review. If you'd prefer not to use
-  // this field, you can disable it here. You can also make it optional
-  // (instead of required) below.
-  'differential.show-test-plan-field' => true,
 
   // Differential has a required "Test Plan" field by default. You can make it
   // optional by setting this to false. You can also completely remove it above,
@@ -958,7 +925,8 @@ return array(
   // task will be created for each uri that posts the story data to the uri.
   // Daemons automagically retry failures 100 times, waiting $fail_count * 60s
   // between each subsequent failure. Be sure to keep the daemon console
-  // (/daemon/) open while developing and testing your end points.
+  // (/daemon/) open while developing and testing your end points. You may need
+  // to restart your daemons to start sending http requests.
   //
   // NOTE: URIs are not validated, the URI must return http status 200 within
   // 30 seconds, and no permission checks are performed.

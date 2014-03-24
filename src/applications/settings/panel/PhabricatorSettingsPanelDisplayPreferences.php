@@ -27,6 +27,8 @@ final class PhabricatorSettingsPanelDisplayPreferences
     $pref_monospaced_textareas =
       PhabricatorUserPreferences::PREFERENCE_MONOSPACED_TEXTAREAS;
 
+    $errors = array();
+    $e_editor = null;
     if ($request->isFormPost()) {
       $monospaced = $request->getStr($pref_monospaced);
 
@@ -46,9 +48,35 @@ final class PhabricatorSettingsPanelDisplayPreferences
         $pref_udiff,
         $request->getBool($pref_udiff));
 
-      $preferences->save();
-      return id(new AphrontRedirectResponse())
-        ->setURI($this->getPanelURI('?saved=true'));
+      $editor_pattern = $preferences->getPreference($pref_editor);
+      if (strlen($editor_pattern)) {
+        $ok = PhabricatorHelpEditorProtocolController::hasAllowedProtocol(
+          $editor_pattern);
+        if (!$ok) {
+          $allowed_key = 'uri.allowed-editor-protocols';
+          $allowed_protocols = PhabricatorEnv::getEnvConfig($allowed_key);
+
+          $proto_names = array();
+          foreach (array_keys($allowed_protocols) as $protocol) {
+            $proto_names[] = $protocol.'://';
+          }
+
+          $errors[] = pht(
+            'Editor link has an invalid or missing protocol. You must '.
+            'use a whitelisted editor protocol from this list: %s. To '.
+            'add protocols, update %s.',
+            implode(', ', $proto_names),
+            phutil_tag('tt', array(), $allowed_key));
+
+          $e_editor = pht('Invalid');
+        }
+      }
+
+      if (!$errors) {
+        $preferences->save();
+        return id(new AphrontRedirectResponse())
+          ->setURI($this->getPanelURI('?saved=true'));
+      }
     }
 
     $example_string = <<<EXAMPLE
@@ -62,7 +90,7 @@ EXAMPLE;
       'a',
       array(
         'href' => PhabricatorEnv::getDoclink(
-          'article/User_Guide_Configuring_an_External_Editor.html'),
+          'User Guide: Configuring an External Editor'),
       ),
       pht('User Guide: Configuring an External Editor'));
 
@@ -103,8 +131,8 @@ EXAMPLE;
         id(new AphrontFormTextControl())
         ->setLabel(pht('Editor Link'))
         ->setName($pref_editor)
-        // How to pht()
         ->setCaption($editor_instructions)
+        ->setError($e_editor)
         ->setValue($preferences->getPreference($pref_editor)))
       ->appendChild(
         id(new AphrontFormSelectControl())
@@ -156,6 +184,7 @@ EXAMPLE;
 
     $form_box = id(new PHUIObjectBoxView())
       ->setHeaderText(pht('Display Preferences'))
+      ->setFormErrors($errors)
       ->setFormSaved($request->getStr('saved') === 'true')
       ->setForm($form);
 

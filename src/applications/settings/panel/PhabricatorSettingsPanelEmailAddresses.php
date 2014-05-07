@@ -171,6 +171,11 @@ final class PhabricatorSettingsPanelEmailAddresses
         return id(new AphrontReloadResponse())->setURI($uri);
       }
 
+      PhabricatorSystemActionEngine::willTakeAction(
+        array($user->getPHID()),
+        new PhabricatorSettingsAddEmailAction(),
+        1);
+
       if (!strlen($email)) {
         $e_email = pht('Required');
         $errors[] = pht('Email is required.');
@@ -324,6 +329,11 @@ final class PhabricatorSettingsPanelEmailAddresses
     $email_id) {
 
     $user = $request->getUser();
+
+    $token = id(new PhabricatorAuthSessionEngine())->requireHighSecuritySession(
+      $user,
+      $request,
+      $this->getPanelURI());
 
     // NOTE: You can only make your own verified addresses primary.
     $email = id(new PhabricatorUserEmail())->loadOneWhere(

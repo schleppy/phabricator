@@ -543,7 +543,7 @@ JX.install('DOM', {
     },
 
 
-/* -(  Serializing Froms  )-------------------------------------------------- */
+/* -(  Serializing Forms  )-------------------------------------------------- */
 
 
     /**
@@ -943,6 +943,7 @@ JX.install('DOM', {
     focus : function(node) {
       try { node.focus(); } catch (lol_ie) {}
     },
+
 
     /**
      * Scroll to the position of an element in the document.

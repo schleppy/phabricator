@@ -630,21 +630,6 @@ return array(
   // be enabled in production.
   'phabricator.developer-mode' => false,
 
-  // When users write comments which have URIs, they'll be automatically linked
-  // if the protocol appears in this set. This whitelist is primarily to prevent
-  // security issues like javascript:// URIs.
-  'uri.allowed-protocols' => array(
-    'http'  => true,
-    'https' => true,
-  ),
-
-  // By default, Phabricator includes some silly nonsense in the UI, such as
-  // a submit button called "Clowncopterize" in Differential and a call to
-  // "Leap Into Action". If you'd prefer more traditional UI strings like
-  // "Submit", you can set this flag to disable most of the jokes and easter
-  // eggs.
-  'phabricator.serious-business' => false,
-
   // Should Phabricator show beta applications on the homepage
   'phabricator.show-beta-applications' => false,
 
@@ -980,7 +965,7 @@ return array(
 
   // Minify static resources by removing whitespace and comments. You should
   // enable this in production, but disable it in development.
-  'celerity.minify' => false,
+  'celerity.minify' => true,
 
   // You can respond to various application events by installing listeners,
   // which will receive callbacks when interesting things occur. Specify a list

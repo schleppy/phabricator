@@ -12,6 +12,10 @@ final class ManiphestPHIDTypeTask extends PhabricatorPHIDType {
     return pht('Task');
   }
 
+  public function getPHIDTypeApplicationClass() {
+    return 'PhabricatorApplicationManiphest';
+  }
+
   public function newObject() {
     return new ManiphestTask();
   }
@@ -38,7 +42,7 @@ final class ManiphestPHIDTypeTask extends PhabricatorPHIDType {
       $handle->setFullName("T{$id}: {$title}");
       $handle->setURI("/T{$id}");
 
-      if (!ManiphestTaskStatus::isOpenStatus($task->getStatus())) {
+      if ($task->isClosed()) {
         $handle->setStatus(PhabricatorObjectHandleStatus::STATUS_CLOSED);
       }
     }

@@ -151,11 +151,10 @@ final class ManiphestTaskDetailController extends ManiphestController {
 
     $transaction_types = array(
       PhabricatorTransactions::TYPE_COMMENT => pht('Comment'),
-      ManiphestTransaction::TYPE_STATUS     => pht('Close Task'),
+      ManiphestTransaction::TYPE_STATUS     => pht('Change Status'),
       ManiphestTransaction::TYPE_OWNER      => pht('Reassign / Claim'),
       ManiphestTransaction::TYPE_CCS        => pht('Add CCs'),
       ManiphestTransaction::TYPE_PRIORITY   => pht('Change Priority'),
-      ManiphestTransaction::TYPE_ATTACH     => pht('Upload File'),
       ManiphestTransaction::TYPE_PROJECTS   => pht('Associate Projects'),
     );
 
@@ -180,21 +179,14 @@ final class ManiphestTaskDetailController extends ManiphestController {
       }
     }
 
-    if ($task->getStatus() == ManiphestTaskStatus::STATUS_OPEN) {
-      $resolution_types = array_select_keys(
-        $resolution_types,
-        array(
-          ManiphestTaskStatus::STATUS_CLOSED_RESOLVED,
-          ManiphestTaskStatus::STATUS_CLOSED_WONTFIX,
-          ManiphestTaskStatus::STATUS_CLOSED_INVALID,
-          ManiphestTaskStatus::STATUS_CLOSED_SPITE,
-        ));
-    } else {
-      $resolution_types = array(
-        ManiphestTaskStatus::STATUS_OPEN => 'Reopened',
-      );
-      $transaction_types[ManiphestTransaction::TYPE_STATUS] =
-        'Reopen Task';
+    // Don't show an option to change to the current status, or to change to
+    // the duplicate status explicitly.
+    unset($resolution_types[$task->getStatus()]);
+    unset($resolution_types[ManiphestTaskStatus::getDuplicateStatus()]);
+
+    // Don't show owner/priority changes for closed tasks, as they don't make
+    // much sense.
+    if ($task->isClosed()) {
       unset($transaction_types[ManiphestTransaction::TYPE_PRIORITY]);
       unset($transaction_types[ManiphestTransaction::TYPE_OWNER]);
     }
@@ -213,13 +205,20 @@ final class ManiphestTaskDetailController extends ManiphestController {
       $draft_text = null;
     }
 
-    $is_serious = PhabricatorEnv::getEnvConfig('phabricator.serious-business');
-
-    if ($is_serious) {
-      // Prevent tasks from being closed "out of spite" in serious business
-      // installs.
-      unset($resolution_types[ManiphestTaskStatus::STATUS_CLOSED_SPITE]);
+    $submit_control = id(new PHUIFormMultiSubmitControl());
+    if (!$task->isClosed()) {
+      $close_image = id(new PHUIIconView())
+          ->setSpriteSheet(PHUIIconView::SPRITE_ICONS)
+          ->setSpriteIcon('check');
+      $submit_control->addButtonView(
+        id(new PHUIButtonView())
+          ->setColor(PHUIButtonView::GREY)
+          ->setIcon($close_image)
+          ->setText(pht('Close Task'))
+          ->setName('scuttle')
+          ->addSigil('alternate-submit-button'));
     }
+    $submit_control->addSubmitButton(pht('Submit'));
 
     $comment_form = new AphrontFormView();
     $comment_form
@@ -236,7 +235,7 @@ final class ManiphestTaskDetailController extends ManiphestController {
           ->setID('transaction-action'))
       ->appendChild(
         id(new AphrontFormSelectControl())
-          ->setLabel(pht('Resolution'))
+          ->setLabel(pht('Status'))
           ->setName('resolution')
           ->setControlID('resolution')
           ->setControlStyle('display: none')
@@ -286,9 +285,7 @@ final class ManiphestTaskDetailController extends ManiphestController {
           ->setValue($draft_text)
           ->setID('transaction-comments')
           ->setUser($user))
-      ->appendChild(
-        id(new AphrontFormSubmitControl())
-          ->setValue($is_serious ? pht('Submit') : pht('Avast!')));
+      ->appendChild($submit_control);
 
     $control_map = array(
       ManiphestTransaction::TYPE_STATUS   => 'resolution',
@@ -296,7 +293,6 @@ final class ManiphestTaskDetailController extends ManiphestController {
       ManiphestTransaction::TYPE_CCS      => 'ccs',
       ManiphestTransaction::TYPE_PRIORITY => 'priority',
       ManiphestTransaction::TYPE_PROJECTS => 'projects',
-      ManiphestTransaction::TYPE_ATTACH   => 'file',
     );
 
     $tokenizer_map = array(
@@ -337,6 +333,7 @@ final class ManiphestTaskDetailController extends ManiphestController {
       ));
     }
 
+    $is_serious = PhabricatorEnv::getEnvConfig('phabricator.serious-business');
     $comment_header = $is_serious
       ? pht('Add Comment')
       : pht('Weigh In');
@@ -380,6 +377,8 @@ final class ManiphestTaskDetailController extends ManiphestController {
         ->setFlush(true)
         ->setHeaderText($comment_header)
         ->appendChild($comment_form);
+      $timeline->setQuoteTargetID('transaction-comments');
+      $timeline->setQuoteRef($object_name);
     }
 
     $object_box = id(new PHUIObjectBoxView())

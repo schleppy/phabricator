@@ -66,7 +66,6 @@ final class PhabricatorFileInfoController extends PhabricatorFileController {
       ),
       array(
         'title' => $file->getName(),
-        'device'  => true,
         'pageObjects' => array($file->getPHID()),
       ));
   }
@@ -116,12 +115,17 @@ final class PhabricatorFileInfoController extends PhabricatorFileController {
 
   private function buildActionView(PhabricatorFile $file) {
     $request = $this->getRequest();
-    $user = $request->getUser();
+    $viewer = $request->getUser();
 
     $id = $file->getID();
 
+    $can_edit = PhabricatorPolicyFilter::hasCapability(
+      $viewer,
+      $file,
+      PhabricatorPolicyCapability::CAN_EDIT);
+
     $view = id(new PhabricatorActionListView())
-      ->setUser($user)
+      ->setUser($viewer)
       ->setObjectURI($this->getRequest()->getRequestURI())
       ->setObject($file);
 
@@ -134,7 +138,7 @@ final class PhabricatorFileInfoController extends PhabricatorFileController {
     } else {
       $view->addAction(
         id(new PhabricatorActionView())
-          ->setUser($user)
+          ->setUser($viewer)
           ->setRenderAsForm(true)
           ->setDownload(true)
           ->setName(pht('Download File'))
@@ -144,10 +148,19 @@ final class PhabricatorFileInfoController extends PhabricatorFileController {
 
     $view->addAction(
       id(new PhabricatorActionView())
+        ->setName(pht('Edit File'))
+        ->setIcon('fa-pencil')
+        ->setHref($this->getApplicationURI("/edit/{$id}/"))
+        ->setWorkflow(!$can_edit)
+        ->setDisabled(!$can_edit));
+
+    $view->addAction(
+      id(new PhabricatorActionView())
         ->setName(pht('Delete File'))
         ->setIcon('fa-times')
         ->setHref($this->getApplicationURI("/delete/{$id}/"))
-        ->setWorkflow(true));
+        ->setWorkflow(true)
+        ->setDisabled(!$can_edit));
 
     return $view;
   }
@@ -180,7 +193,7 @@ final class PhabricatorFileInfoController extends PhabricatorFileController {
 
     $finfo->addProperty(
       pht('Size'),
-      phabricator_format_bytes($file->getByteSize()));
+      phutil_format_bytes($file->getByteSize()));
 
     $finfo->addProperty(
       pht('Mime Type'),
@@ -200,6 +213,17 @@ final class PhabricatorFileInfoController extends PhabricatorFileController {
         pht('%s px', new PhutilNumber($height)));
     }
 
+    $is_image = $file->isViewableImage();
+    if ($is_image) {
+      $image_string = pht('Yes');
+      $cache_string = $file->getCanCDN() ? pht('Yes') : pht('No');
+    } else {
+      $image_string = pht('No');
+      $cache_string = pht('Not Applicable');
+    }
+
+    $finfo->addProperty(pht('Viewable Image'), $image_string);
+    $finfo->addProperty(pht('Cacheable'), $cache_string);
 
     $storage_properties = new PHUIPropertyListView();
     $box->addPropertyList($storage_properties, pht('Storage'));

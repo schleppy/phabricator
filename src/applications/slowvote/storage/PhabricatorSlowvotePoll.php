@@ -1,14 +1,13 @@
 <?php
 
-/**
- * @group slowvote
- */
 final class PhabricatorSlowvotePoll extends PhabricatorSlowvoteDAO
   implements
     PhabricatorPolicyInterface,
     PhabricatorSubscribableInterface,
     PhabricatorFlaggableInterface,
-    PhabricatorTokenReceiverInterface {
+    PhabricatorTokenReceiverInterface,
+    PhabricatorProjectInterface,
+    PhabricatorDestructibleInterface {
 
   const RESPONSES_VISIBLE = 0;
   const RESPONSES_VOTERS  = 1;
@@ -33,11 +32,11 @@ final class PhabricatorSlowvotePoll extends PhabricatorSlowvoteDAO
   public static function initializeNewPoll(PhabricatorUser $actor) {
     $app = id(new PhabricatorApplicationQuery())
       ->setViewer($actor)
-      ->withClasses(array('PhabricatorApplicationSlowvote'))
+      ->withClasses(array('PhabricatorSlowvoteApplication'))
       ->executeOne();
 
     $view_policy = $app->getPolicy(
-      PhabricatorSlowvoteCapabilityDefaultView::CAPABILITY);
+      PhabricatorSlowvoteDefaultViewCapability::CAPABILITY);
 
     return id(new PhabricatorSlowvotePoll())
       ->setAuthorPHID($actor->getPHID())
@@ -52,7 +51,7 @@ final class PhabricatorSlowvotePoll extends PhabricatorSlowvoteDAO
 
   public function generatePHID() {
     return PhabricatorPHID::generateNewPHID(
-      PhabricatorSlowvotePHIDTypePoll::TYPECONST);
+      PhabricatorSlowvotePollPHIDType::TYPECONST);
   }
 
   public function getOptions() {
@@ -113,8 +112,7 @@ final class PhabricatorSlowvotePoll extends PhabricatorSlowvoteDAO
   }
 
   public function describeAutomaticCapability($capability) {
-    return pht(
-      'The author of a poll can always view and edit it.');
+    return pht('The author of a poll can always view and edit it.');
   }
 
 
@@ -142,5 +140,26 @@ final class PhabricatorSlowvotePoll extends PhabricatorSlowvoteDAO
     return array($this->getAuthorPHID());
   }
 
+/* -(  PhabricatorDestructableInterface  )----------------------------------- */
+
+  public function destroyObjectPermanently(
+    PhabricatorDestructionEngine $engine) {
+
+    $this->openTransaction();
+      $choices = id(new PhabricatorSlowvoteChoice())->loadAllWhere(
+        'pollID = %d',
+        $this->getID());
+      foreach ($choices as $choice) {
+        $choice->delete();
+      }
+      $options = id(new PhabricatorSlowvoteOption())->loadAllWhere(
+        'pollID = %d',
+        $this->getID());
+      foreach ($options as $option) {
+        $option->delete();
+      }
+      $this->delete();
+    $this->saveTransaction();
+  }
 
 }

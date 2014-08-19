@@ -153,7 +153,8 @@ final class PhabricatorApplicationSearchController
       'query/advanced');
 
     $form = id(new AphrontFormView())
-      ->setUser($user);
+      ->setUser($user)
+      ->setAction($request->getPath());
 
     $engine->buildSearchForm($form, $saved_query);
 
@@ -268,7 +269,6 @@ final class PhabricatorApplicationSearchController
       $nav,
       array(
         'title' => $title,
-        'device' => true,
       ));
   }
 
@@ -352,7 +352,6 @@ final class PhabricatorApplicationSearchController
       $nav,
       array(
         'title' => pht('Saved Queries'),
-        'device' => true,
       ));
   }
 

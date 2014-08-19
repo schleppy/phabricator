@@ -252,15 +252,22 @@ abstract class DifferentialChangesetHTMLRenderer
         break;
     }
 
-    $encoding = $this->getOriginalCharacterEncoding();
-    if ($encoding != 'utf8' && ($file == DifferentialChangeType::FILE_TEXT)) {
-      if ($encoding) {
-        $messages[] = pht(
-          'This file was converted from %s for display.',
-          phutil_tag('strong', array(), $encoding));
-      } else {
-        $messages[] = pht(
-          'This file uses an unknown character encoding.');
+    // If this is a text file with at least one hunk, we may have converted
+    // the text encoding. In this case, show a note.
+    $show_encoding = ($file == DifferentialChangeType::FILE_TEXT) &&
+                     ($changeset->getHunks());
+
+    if ($show_encoding) {
+      $encoding = $this->getOriginalCharacterEncoding();
+      if ($encoding != 'utf8') {
+        if ($encoding) {
+          $messages[] = pht(
+            'This file was converted from %s for display.',
+            phutil_tag('strong', array(), $encoding));
+        } else {
+          $messages[] = pht(
+            'This file uses an unknown character encoding.');
+        }
       }
     }
 
@@ -282,12 +289,22 @@ abstract class DifferentialChangesetHTMLRenderer
 
   protected function renderPropertyChangeHeader() {
     $changeset = $this->getChangeset();
+    list($old, $new) = $this->getChangesetProperties($changeset);
 
-    $old = $changeset->getOldProperties();
-    $new = $changeset->getNewProperties();
+    // If we don't have any property changes, don't render this table.
+    if ($old === $new) {
+      return null;
+    }
 
     $keys = array_keys($old + $new);
     sort($keys);
+
+    $key_map = array(
+      'unix:filemode' => pht('File Mode'),
+      'file:dimensions' => pht('Image Dimensions'),
+      'file:mimetype' => pht('MIME Type'),
+      'file:size' => pht('File Size'),
+    );
 
     $rows = array();
     foreach ($keys as $key) {
@@ -306,8 +323,10 @@ abstract class DifferentialChangesetHTMLRenderer
           $nval = phutil_escape_html_newlines($nval);
         }
 
+        $readable_key = idx($key_map, $key, $key);
+
         $rows[] = phutil_tag('tr', array(), array(
-          phutil_tag('th', array(), $key),
+          phutil_tag('th', array(), $readable_key),
           phutil_tag('td', array('class' => 'oval'), $oval),
           phutil_tag('td', array('class' => 'nval'), $nval),
         ));

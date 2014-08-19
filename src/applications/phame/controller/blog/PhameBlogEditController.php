@@ -96,7 +96,7 @@ final class PhameBlogEditController
           $blog->save();
           return id(new AphrontRedirectResponse())
             ->setURI($this->getApplicationURI('blog/view/'.$blog->getID().'/'));
-        } catch (AphrontQueryDuplicateKeyException $ex) {
+        } catch (AphrontDuplicateKeyQueryException $ex) {
           $errors[] = pht('Domain must be unique.');
           $e_custom_domain = pht('Not Unique');
         }
@@ -188,7 +188,6 @@ final class PhameBlogEditController
       $nav,
       array(
         'title' => $page_title,
-        'device' => true,
       ));
   }
 }

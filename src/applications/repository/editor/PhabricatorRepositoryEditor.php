@@ -3,6 +3,14 @@
 final class PhabricatorRepositoryEditor
   extends PhabricatorApplicationTransactionEditor {
 
+  public function getEditorApplicationClass() {
+    return 'PhabricatorDiffusionApplication';
+  }
+
+  public function getEditorObjectsDescription() {
+    return pht('Repositories');
+  }
+
   public function getTransactionTypes() {
     $types = parent::getTransactionTypes();
 
@@ -225,8 +233,7 @@ final class PhabricatorRepositoryEditor
         $old_phid = $xaction->getOldValue();
         $new_phid = $xaction->getNewValue();
 
-        $editor = id(new PhabricatorEdgeEditor())
-          ->setActor($this->requireActor());
+        $editor = new PhabricatorEdgeEditor();
 
         $edge_type = PhabricatorEdgeConfig::TYPE_OBJECT_USES_CREDENTIAL;
         $src_phid = $object->getPHID();

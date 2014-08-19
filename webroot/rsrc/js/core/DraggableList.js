@@ -44,6 +44,7 @@ JX.install('DraggableList', {
     _dragging : null,
     _locked : 0,
     _origin : null,
+    _originScroll : null,
     _target : null,
     _targets : null,
     _dimensions : null,
@@ -166,6 +167,7 @@ JX.install('DraggableList', {
 
       this._dragging = e.getNode(this._sigil);
       this._origin = JX.$V(e);
+      this._originScroll = JX.Vector.getAggregateScrollForNode(this._dragging);
       this._dimensions = JX.$V(this._dragging);
 
       for (var ii = 0; ii < this._group.length; ii++) {
@@ -260,7 +262,6 @@ JX.install('DraggableList', {
 
     _getCurrentTarget : function(p) {
       var ghost = this.getGhostNode();
-      var target = this._target;
       var targets = this._targets;
       var dragging = this._dragging;
 
@@ -360,7 +361,12 @@ JX.install('DraggableList', {
       // adjust the cursor position for the change in node document position.
       // Do this before choosing a new target to avoid a flash of nonsense.
 
-      var origin = this._origin;
+      var scroll = JX.Vector.getAggregateScrollForNode(this._dragging);
+
+      var origin = {
+        x: this._origin.x + (this._originScroll.x - scroll.x),
+        y: this._origin.y + (this._originScroll.y - scroll.y)
+      };
 
       var adjust_h = 0;
       var adjust_y = 0;
@@ -455,7 +461,7 @@ JX.install('DraggableList', {
     _unlock : function() {
       if (__DEV__) {
         if (!this._locked) {
-          JX.$E("JX.Draggable.unlock(): Draggable is not locked!");
+          JX.$E('JX.Draggable.unlock(): Draggable is not locked!');
         }
       }
       this._locked--;
@@ -464,6 +470,7 @@ JX.install('DraggableList', {
       }
       return this;
     }
+
   }
 
 });

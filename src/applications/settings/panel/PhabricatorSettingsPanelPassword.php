@@ -25,7 +25,7 @@ final class PhabricatorSettingsPanelPassword
 
     // ...or this install doesn't support password authentication at all.
 
-    if (!PhabricatorAuthProviderPassword::getPasswordProvider()) {
+    if (!PhabricatorPasswordAuthProvider::getPasswordProvider()) {
       return false;
     }
 
@@ -116,6 +116,10 @@ final class PhabricatorSettingsPanelPassword
           $next = $this->getPanelURI('?saved=true');
         }
 
+        id(new PhabricatorAuthSessionEngine())->terminateLoginSessions(
+          $user,
+          $request->getCookie(PhabricatorCookies::COOKIE_SESSION));
+
         return id(new AphrontRedirectResponse())->setURI($next);
       }
     }
@@ -151,12 +155,14 @@ final class PhabricatorSettingsPanelPassword
     $form
       ->appendChild(
         id(new AphrontFormPasswordControl())
+          ->setDisableAutocomplete(true)
           ->setLabel(pht('New Password'))
           ->setError($e_new)
           ->setName('new_pw'));
     $form
       ->appendChild(
         id(new AphrontFormPasswordControl())
+          ->setDisableAutocomplete(true)
           ->setLabel(pht('Confirm Password'))
           ->setCaption($len_caption)
           ->setError($e_conf)
@@ -177,6 +183,11 @@ final class PhabricatorSettingsPanelPassword
         ->setLabel(pht('Best Available Algorithm'))
         ->setValue(PhabricatorPasswordHasher::getBestAlgorithmName()));
 
+    $form->appendRemarkupInstructions(
+      pht(
+        'NOTE: Changing your password will terminate any other outstanding '.
+        'login sessions.'));
+
     $form_box = id(new PHUIObjectBoxView())
       ->setHeaderText(pht('Change Password'))
       ->setFormSaved($request->getStr('saved'))
@@ -187,4 +198,6 @@ final class PhabricatorSettingsPanelPassword
       $form_box,
     );
   }
+
+
 }

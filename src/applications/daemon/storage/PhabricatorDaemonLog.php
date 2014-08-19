@@ -7,13 +7,14 @@ final class PhabricatorDaemonLog extends PhabricatorDaemonDAO
   const STATUS_RUNNING = 'run';
   const STATUS_DEAD    = 'dead';
   const STATUS_WAIT    = 'wait';
+  const STATUS_EXITING  = 'exiting';
   const STATUS_EXITED  = 'exit';
 
   protected $daemon;
   protected $host;
   protected $pid;
   protected $argv;
-  protected $explicitArgv;
+  protected $explicitArgv = array();
   protected $status;
 
   public function getConfiguration() {
@@ -23,6 +24,14 @@ final class PhabricatorDaemonLog extends PhabricatorDaemonDAO
         'explicitArgv' => self::SERIALIZATION_JSON,
       ),
     ) + parent::getConfiguration();
+  }
+
+  public function getExplicitArgv() {
+    $argv = $this->explicitArgv;
+    if (!is_array($argv)) {
+      return array();
+    }
+    return $argv;
   }
 
 

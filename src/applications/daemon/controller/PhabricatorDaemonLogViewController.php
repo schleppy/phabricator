@@ -53,6 +53,10 @@ final class PhabricatorDaemonLogViewController
         $tag->setBackgroundColor(PHUITagView::COLOR_BLUE);
         $tag->setName(pht('Waiting'));
         break;
+      case PhabricatorDaemonLog::STATUS_EXITING:
+        $tag->setBackgroundColor(PHUITagView::COLOR_YELLOW);
+        $tag->setName(pht('Exiting'));
+        break;
       case PhabricatorDaemonLog::STATUS_EXITED:
         $tag->setBackgroundColor(PHUITagView::COLOR_GREY);
         $tag->setName(pht('Exited'));
@@ -83,6 +87,7 @@ final class PhabricatorDaemonLogViewController
       ),
       array(
         'title' => pht('Daemon Log'),
+        'device' => false,
       ));
   }
 
@@ -108,14 +113,14 @@ final class PhabricatorDaemonLogViewController
         $details = pht(
           'This daemon is running normally and reported a status update '.
           'recently (within %s).',
-          phabricator_format_relative_time($unknown_time));
+          phutil_format_relative_time($unknown_time));
         break;
       case PhabricatorDaemonLog::STATUS_UNKNOWN:
         $details = pht(
           'This daemon has not reported a status update recently (within %s). '.
           'It may have exited abruptly. After %s, it will be presumed dead.',
-          phabricator_format_relative_time($unknown_time),
-          phabricator_format_relative_time($dead_time));
+          phutil_format_relative_time($unknown_time),
+          phutil_format_relative_time($dead_time));
         break;
       case PhabricatorDaemonLog::STATUS_DEAD:
         $details = pht(
@@ -123,7 +128,7 @@ final class PhabricatorDaemonLogViewController
           'presumed dead. Usually, this indicates that the daemon was '.
           'killed or otherwise exited abruptly with an error. You may '.
           'need to restart it.',
-          phabricator_format_relative_time($dead_time));
+          phutil_format_relative_time($dead_time));
         break;
       case PhabricatorDaemonLog::STATUS_WAIT:
         $details = pht(
@@ -132,8 +137,12 @@ final class PhabricatorDaemonLogViewController
           'doing work and is waiting a little while (%s) to resume '.
           'processing. After encountering an error, daemons wait before '.
           'resuming work to avoid overloading services.',
-          phabricator_format_relative_time($unknown_time),
-          phabricator_format_relative_time($wait_time));
+          phutil_format_relative_time($unknown_time),
+          phutil_format_relative_time($wait_time));
+        break;
+      case PhabricatorDaemonLog::STATUS_EXITING:
+        $details = pht(
+          'This daemon is shutting down gracefully.');
         break;
       case PhabricatorDaemonLog::STATUS_EXITED:
         $details = pht(
@@ -151,7 +160,7 @@ final class PhabricatorDaemonLogViewController
       pht('Seen'),
       pht(
         '%s ago (%s)',
-        phabricator_format_relative_time(time() - $u_epoch),
+        phutil_format_relative_time(time() - $u_epoch),
         phabricator_datetime($u_epoch, $viewer)));
 
     $argv = $daemon->getArgv();

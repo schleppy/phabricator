@@ -51,13 +51,24 @@ final class PhortuneProviderController extends PhortuneController {
       $response,
       array(
         'title' => $title,
-        'device' => true,
       ));
   }
 
 
   public function loadCart($id) {
-    return id(new PhortuneCart());
+    $request = $this->getRequest();
+    $viewer = $request->getUser();
+
+    return id(new PhortuneCartQuery())
+      ->setViewer($viewer)
+      ->needPurchases(true)
+      ->withIDs(array($id))
+      ->requireCapabilities(
+        array(
+          PhabricatorPolicyCapability::CAN_VIEW,
+          PhabricatorPolicyCapability::CAN_EDIT,
+        ))
+      ->executeOne();
   }
 
 }

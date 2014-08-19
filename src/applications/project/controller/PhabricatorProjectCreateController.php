@@ -3,14 +3,12 @@
 final class PhabricatorProjectCreateController
   extends PhabricatorProjectController {
 
-
   public function processRequest() {
-
     $request = $this->getRequest();
     $user = $request->getUser();
 
     $this->requireApplicationCapability(
-      ProjectCapabilityCreateProjects::CAPABILITY);
+      ProjectCreateProjectsCapability::CAPABILITY);
 
     $project = PhabricatorProject::initializeNewProject($user);
 
@@ -110,8 +108,8 @@ final class PhabricatorProjectCreateController
         ),
         array(
           'title' => pht('Create New Project'),
-          'device' => true,
         ));
     }
   }
+
 }

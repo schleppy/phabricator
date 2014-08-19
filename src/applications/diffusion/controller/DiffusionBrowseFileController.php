@@ -167,6 +167,7 @@ final class DiffusionBrowseFileController extends DiffusionBrowseController {
       ),
       array(
         'title' => $basename,
+        'device' => false,
       ));
   }
 
@@ -612,7 +613,6 @@ final class DiffusionBrowseFileController extends DiffusionBrowseController {
 
       foreach ($this->lintMessages as $message) {
         $inline = id(new PhabricatorAuditInlineComment())
-          ->setID($message['id'])
           ->setSyntheticAuthor(
             ArcanistLintSeverity::getStringForSeverity($message['severity']).
             ' '.$message['code'].' ('.$message['name'].')')

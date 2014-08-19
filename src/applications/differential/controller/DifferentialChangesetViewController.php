@@ -286,6 +286,7 @@ final class DifferentialChangesetViewController extends DifferentialController {
       ),
       array(
         'title' => pht('Changeset View'),
+        'device' => false,
       ));
   }
 

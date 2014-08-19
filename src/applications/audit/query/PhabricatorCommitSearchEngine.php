@@ -59,6 +59,11 @@ final class PhabricatorCommitSearchEngine
       $query->withAuditAwaitingUser($this->requireViewer());
     }
 
+    $repository_phids = $saved->getParameter('repositoryPHIDs', array());
+    if ($repository_phids) {
+      $query->withRepositoryPHIDs($repository_phids);
+    }
+
     return $query;
   }
 
@@ -71,11 +76,13 @@ final class PhabricatorCommitSearchEngine
       'commitAuthorPHIDs',
       array());
     $audit_status = $saved->getParameter('auditStatus', null);
+    $repository_phids = $saved->getParameter('repositoryPHIDs', array());
 
     $phids = array_mergev(
       array(
         $auditor_phids,
-        $commit_author_phids));
+        $commit_author_phids,
+        $repository_phids));
 
     $handles = id(new PhabricatorHandleQuery())
       ->setViewer($this->requireViewer())
@@ -85,13 +92,13 @@ final class PhabricatorCommitSearchEngine
     $form
       ->appendChild(
         id(new AphrontFormTokenizerControl())
-          ->setDatasource('/typeahead/common/usersprojectsorpackages/')
+          ->setDatasource(new DiffusionAuditorDatasource())
           ->setName('auditorPHIDs')
           ->setLabel(pht('Auditors'))
           ->setValue(array_select_keys($handles, $auditor_phids)))
       ->appendChild(
         id(new AphrontFormTokenizerControl())
-          ->setDatasource('/typeahead/common/users/')
+          ->setDatasource(new PhabricatorPeopleDatasource())
           ->setName('authors')
           ->setLabel(pht('Commit Authors'))
           ->setValue(array_select_keys($handles, $commit_author_phids)))
@@ -100,7 +107,14 @@ final class PhabricatorCommitSearchEngine
          ->setName('auditStatus')
          ->setLabel(pht('Audit Status'))
          ->setOptions($this->getAuditStatusOptions())
-         ->setValue($audit_status));
+         ->setValue($audit_status))
+       ->appendChild(
+         id(new AphrontFormTokenizerControl())
+         ->setLabel(pht('Repositories'))
+         ->setName('repositoryPHIDs')
+         ->setDatasource(new DiffusionRepositoryDatasource())
+         ->setValue(array_select_keys($handles, $repository_phids)));
+
   }
 
   protected function getURI($path) {

@@ -16,34 +16,66 @@ JX.behavior('aphlict-listen', function(config) {
   var showing_reload = false;
 
   function onready() {
-    var client = new JX.Aphlict(config.id, config.server, config.port)
+    var client = new JX.Aphlict(
+      config.id,
+      config.server,
+      config.port,
+      config.subscriptions);
+
+    client
       .setHandler(onaphlictmessage)
       .start();
   }
 
+  JX.Stratcom.listen('aphlict-receive-message', null, function(e) {
+    var message = e.getData();
+
+    if (message.type != 'notification') {
+      return;
+    }
+
+    var request = new JX.Request(
+      '/notification/individual/',
+      onnotification);
+
+    var routable = request
+      .addData({key: message.key})
+      .getRoutable();
+
+    routable
+      .setType('notification')
+      .setPriority(250);
+
+    JX.Router.getInstance().queue(routable);
+  });
+
+
   // Respond to a notification from the Aphlict notification server. We send
   // a request to Phabricator to get notification details.
   function onaphlictmessage(type, message) {
-    if (type == 'receive') {
-      var routable = new JX.Request('/notification/individual/', onnotification)
-        .addData({key: message.key})
-        .getRoutable();
-
-      routable
-        .setType('notification')
-        .setPriority(250);
-
-      JX.Router.getInstance().queue(routable);
-    } else if (__DEV__) {
-      if (config.debug) {
-        var details = message ? JX.JSON.stringify(message) : '';
-
+    switch (type) {
+      case 'error':
         new JX.Notification()
-          .setContent('(Aphlict) [' + type + '] ' + details)
-          .alterClassName('jx-notification-debug', true)
+          .setContent('(Aphlict) ' + message)
+          .alterClassName('jx-notification-error', true)
           .setDuration(0)
           .show();
-      }
+        break;
+
+      case 'receive':
+        JX.Stratcom.invoke('aphlict-receive-message', null, message);
+        break;
+
+      default:
+        if (__DEV__ && config.debug) {
+          var details = message ? JX.JSON.stringify(message) : '';
+
+          new JX.Notification()
+            .setContent('(Aphlict) [' + type + '] ' + details)
+            .alterClassName('jx-notification-debug', true)
+            .setDuration(3000)
+            .show();
+        }
     }
   }
 
@@ -64,8 +96,7 @@ JX.behavior('aphlict-listen', function(config) {
 
     // If the notification affected an object on this page, show a
     // permanent reload notification if we aren't already.
-    if ((response.primaryObjectPHID in config.pageObjects) &&
-        !showing_reload) {
+    if ((response.primaryObjectPHID in config.pageObjects) && !showing_reload) {
       var reload = new JX.Notification()
         .setContent('Page updated, click to reload.')
         .alterClassName('jx-notification-alert', true)
@@ -86,10 +117,10 @@ JX.behavior('aphlict-listen', function(config) {
   // Add Flash object to page
   JX.$(config.containerID).innerHTML =
     '<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000">' +
-      '<param name="movie" value="/rsrc/swf/aphlict.swf" />' +
+      '<param name="movie" value="' + config.swfURI + '" />' +
       '<param name="allowScriptAccess" value="always" />' +
       '<param name="wmode" value="opaque" />' +
-      '<embed src="/rsrc/swf/aphlict.swf" wmode="opaque"' +
+      '<embed src="' + config.swfURI + '" wmode="opaque"' +
         'width="0" height="0" id="' + config.id + '">' +
     '</embed></object>'; //Evan sanctioned
 });

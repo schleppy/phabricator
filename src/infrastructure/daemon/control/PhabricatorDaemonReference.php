@@ -3,18 +3,34 @@
 final class PhabricatorDaemonReference {
 
   private $name;
+  private $argv;
   private $pid;
   private $start;
   private $pidFile;
 
   private $daemonLog;
 
+  public static function newFromFile($path) {
+    $pid_data = Filesystem::readFile($path);
+    $dict = phutil_json_decode($pid_data);
+    $ref = self::newFromDictionary($dict);
+    $ref->pidFile = $path;
+    return $ref;
+  }
+
   public static function newFromDictionary(array $dict) {
     $ref = new PhabricatorDaemonReference();
 
     $ref->name  = idx($dict, 'name', 'Unknown');
+    $ref->argv  = idx($dict, 'argv', array());
     $ref->pid   = idx($dict, 'pid');
     $ref->start = idx($dict, 'start');
+
+    $ref->daemonLog = id(new PhabricatorDaemonLog())->loadOneWhere(
+      'daemon = %s AND pid = %d AND dateCreated = %d',
+      $ref->name,
+      $ref->pid,
+      $ref->start);
 
     return $ref;
   }
@@ -56,17 +72,20 @@ final class PhabricatorDaemonReference {
     return $this->name;
   }
 
+  public function getArgv() {
+    return $this->argv;
+  }
+
   public function getEpochStarted() {
     return $this->start;
   }
 
-  public function setPIDFile($pid_file) {
-    $this->pidFile = $pid_file;
-    return $this;
-  }
-
   public function getPIDFile() {
     return $this->pidFile;
+  }
+
+  public function getDaemonLog() {
+    return $this->daemonLog;
   }
 
   public function isRunning() {

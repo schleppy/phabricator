@@ -198,7 +198,7 @@ final class PhabricatorTypeaheadCommonDatasourceController
           ->setURI('/p/'.$user->getUsername())
           ->setPHID($user->getPHID())
           ->setPriorityString($user->getUsername())
-          ->setIcon('policy-all')
+          ->setIcon('fa-user bluegrey')
           ->setPriorityType('user')
           ->setClosed($closed);
 
@@ -285,10 +285,11 @@ final class PhabricatorTypeaheadCommonDatasourceController
 
         $proj_result = id(new PhabricatorTypeaheadResult())
           ->setName($proj->getName())
-          ->setDisplayType("Project")
+          ->setDisplayType('Project')
           ->setURI('/project/view/'.$proj->getID().'/')
           ->setPHID($proj->getPHID())
-          ->setIcon('policy-project')
+          ->setIcon($proj->getIcon().' bluegrey')
+          ->setPriorityType('proj')
           ->setClosed($closed);
 
         $proj_result->setImageURI($proj->getProfileImageURI());
@@ -314,7 +315,7 @@ final class PhabricatorTypeaheadCommonDatasourceController
       $packages = id(new PhabricatorOwnersPackage())->loadAll();
       foreach ($packages as $package) {
         $results[] = id(new PhabricatorTypeaheadResult())
-          ->setIcon('pl-testplan')
+          ->setIcon('fa-list-alt bluegrey')
           ->setName($package->getName())
           ->setURI('/owners/package/'.$package->getID().'/')
           ->setPHID($package->getPHID());
@@ -338,7 +339,7 @@ final class PhabricatorTypeaheadCommonDatasourceController
           continue;
         }
         $name = $application->getName().' '.$application->getShortDescription();
-
+        $img = 'apps-'.$application->getIconName().'-dark-large';
         $results[] = id(new PhabricatorTypeaheadResult())
           ->setName($name)
           ->setURI($uri)
@@ -347,7 +348,8 @@ final class PhabricatorTypeaheadCommonDatasourceController
           ->setDisplayName($application->getName())
           ->setDisplayType($application->getShortDescription())
           ->setImageuRI($application->getIconURI())
-          ->setPriorityType('apps');
+          ->setPriorityType('apps')
+          ->setImageSprite('phabricator-search-icon sprite-apps-large '.$img);
       }
     }
 
@@ -423,6 +425,7 @@ final class PhabricatorTypeaheadCommonDatasourceController
         'Display Type',
         'Image URI',
         'Priority Type',
+        'Sprite Class',
       ));
 
     $panel = new AphrontPanelView();
@@ -432,7 +435,8 @@ final class PhabricatorTypeaheadCommonDatasourceController
     return $this->buildStandardPageResponse(
       $panel,
       array(
-        'title' => 'Typeahead Results',
+        'title' => pht('Typeahead Results'),
+        'device' => true
       ));
   }
 

@@ -113,7 +113,7 @@ final class DiffusionHistoryController extends DiffusionController {
       id(new PhabricatorActionView())
         ->setName(pht('Browse Content'))
         ->setHref($browse_uri)
-        ->setIcon('file'));
+        ->setIcon('fa-files-o'));
 
     // TODO: Sometimes we do have a change view, we need to look at the most
     // recent history entry to figure it out.
@@ -121,13 +121,11 @@ final class DiffusionHistoryController extends DiffusionController {
     $request = $this->getRequest();
     if ($request->getBool('copies')) {
       $branch_name = pht('Hide Copies/Branches');
-      $branch_icon = 'fork-grey';
       $branch_uri = $request->getRequestURI()
         ->alter('offset', null)
         ->alter('copies', null);
     } else {
       $branch_name = pht('Show Copies/Branches');
-      $branch_icon = 'fork';
       $branch_uri = $request->getRequestURI()
         ->alter('offset', null)
         ->alter('copies', true);
@@ -136,7 +134,7 @@ final class DiffusionHistoryController extends DiffusionController {
     $view->addAction(
       id(new PhabricatorActionView())
         ->setName($branch_name)
-        ->setIcon($branch_icon)
+        ->setIcon('fa-code-fork')
         ->setHref($branch_uri));
 
     return $view;
@@ -152,7 +150,7 @@ final class DiffusionHistoryController extends DiffusionController {
       ->setUser($viewer)
       ->setActionList($actions);
 
-    $stable_commit = $drequest->getStableCommitName();
+    $stable_commit = $drequest->getStableCommit();
     $callsign = $drequest->getRepository()->getCallsign();
 
     $view->addProperty(

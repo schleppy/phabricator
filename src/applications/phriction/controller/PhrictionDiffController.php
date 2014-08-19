@@ -13,16 +13,19 @@ final class PhrictionDiffController
   }
 
   public function processRequest() {
-
     $request = $this->getRequest();
     $user = $request->getUser();
 
-    $document = id(new PhrictionDocument())->load($this->id);
+    $document = id(new PhrictionDocumentQuery())
+      ->setViewer($user)
+      ->withIDs(array($this->id))
+      ->needContent(true)
+      ->executeOne();
     if (!$document) {
       return new Aphront404Response();
     }
 
-    $current = id(new PhrictionContent())->load($document->getContentID());
+    $current = $document->getContent();
 
     $l = $request->getInt('l');
     $r = $request->getInt('r');
@@ -111,7 +114,7 @@ final class PhrictionDiffController
       pht('History'),
       PhrictionDocument::getSlugURI($slug, 'history'));
 
-    $title = pht("Version %s vs %s", $l, $r);
+    $title = pht('Version %s vs %s', $l, $r);
 
     $header = id(new PHUIHeaderView())
       ->setHeader($title);
@@ -257,7 +260,6 @@ final class PhrictionDiffController
     $handles = $this->loadViewerHandles($phids);
 
     $list = new PHUIObjectItemListView();
-    $list->setCards(true);
     $list->setFlush(true);
 
     $first = true;

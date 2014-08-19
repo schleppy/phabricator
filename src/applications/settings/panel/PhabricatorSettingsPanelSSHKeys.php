@@ -206,8 +206,7 @@ final class PhabricatorSettingsPanelSSHKeys
     $header = new PHUIHeaderView();
 
     $upload_icon = id(new PHUIIconView())
-      ->setSpriteSheet(PHUIIconView::SPRITE_ICONS)
-      ->setSpriteIcon('upload');
+      ->setIconFont('fa-upload');
     $upload_button = id(new PHUIButtonView())
       ->setText(pht('Upload Public Key'))
       ->setHref($this->getPanelURI('?edit=true'))
@@ -222,8 +221,7 @@ final class PhabricatorSettingsPanelSSHKeys
     }
 
     $generate_icon = id(new PHUIIconView())
-      ->setSpriteSheet(PHUIIconView::SPRITE_ICONS)
-      ->setSpriteIcon('lock');
+      ->setIconFont('fa-lock');
     $generate_button = id(new PHUIButtonView())
       ->setText(pht('Generate Keypair'))
       ->setHref($this->getPanelURI('?generate=true'))
@@ -367,7 +365,7 @@ final class PhabricatorSettingsPanelSSHKeys
         ->appendParagraph($explain)
         ->appendParagraph(
           pht(
-            "Phabricator will not retain a copy of the private key."))
+            'Phabricator will not retain a copy of the private key.'))
         ->addSubmitButton(pht('Generate Keypair'));
     } catch (Exception $ex) {
       $dialog

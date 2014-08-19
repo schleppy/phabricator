@@ -6,7 +6,7 @@
 final class ConduitAPI_project_query_Method extends ConduitAPI_project_Method {
 
   public function getMethodDescription() {
-    return "Execute searches for Projects.";
+    return 'Execute searches for Projects.';
   }
 
   public function defineParamTypes() {
@@ -19,10 +19,13 @@ final class ConduitAPI_project_query_Method extends ConduitAPI_project_Method {
       PhabricatorProjectQuery::STATUS_ARCHIVED,
     );
 
+    $status_const = $this->formatStringConstants($statuses);
+
     return array(
       'ids'               => 'optional list<int>',
       'phids'             => 'optional list<phid>',
-      'status'            => 'optional enum<'.implode(', ', $statuses).'>',
+      'slugs'             => 'optional list<string>',
+      'status'            => 'optional '.$status_const,
 
       'members'           => 'optional list<phid>',
 
@@ -36,8 +39,7 @@ final class ConduitAPI_project_query_Method extends ConduitAPI_project_Method {
   }
 
   public function defineErrorTypes() {
-    return array(
-    );
+    return array();
   }
 
   protected function execute(ConduitAPIRequest $request) {
@@ -58,6 +60,11 @@ final class ConduitAPI_project_query_Method extends ConduitAPI_project_Method {
     $phids = $request->getValue('phids');
     if ($phids) {
       $query->withPHIDs($phids);
+    }
+
+    $slugs = $request->getValue('slugs');
+    if ($slugs) {
+      $query->withSlugs($slugs);
     }
 
     $members = $request->getValue('members');

@@ -66,8 +66,7 @@ final class ConpherenceWidgetController extends
 
     $widgets = array();
     $new_icon = id(new PHUIIconView())
-      ->setSpriteSheet(PHUIIconView::SPRITE_ACTIONS)
-      ->setSpriteIcon('new-grey')
+      ->setIconFont('fa-plus')
       ->setHref($this->getWidgetURI())
       ->setMetadata(array('widget' => null))
       ->addSigil('conpherence-widget-adder');
@@ -275,8 +274,8 @@ final class ConpherenceWidgetController extends
               phabricator_format_local_time(
                 $status->getDateFrom(),
                 $user,
-                $time_str) .
-              ' - ' .
+                $time_str).
+              ' - '.
               phabricator_format_local_time(
                 $status->getDateTo(),
                 $user,

@@ -135,7 +135,7 @@ final class DiffusionCommitQuery
   public function getIdentifierMap() {
     if ($this->identifierMap === null) {
       throw new Exception(
-        "You must execute() the query before accessing the identifier map.");
+        'You must execute() the query before accessing the identifier map.');
     }
     return $this->identifierMap;
   }
@@ -250,6 +250,9 @@ final class DiffusionCommitQuery
       $data = mpull($data, null, 'getCommitID');
       foreach ($commits as $commit) {
         $commit_data = idx($data, $commit->getID());
+        if (!$commit_data) {
+          $commit_data = new PhabricatorRepositoryCommitData();
+        }
         $commit->attachCommitData($commit_data);
       }
     }

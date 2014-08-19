@@ -253,7 +253,8 @@ abstract class PhabricatorInlineCommentController
       ->setUser($this->getRequest()->getUser())
       ->setSigil('differential-inline-comment-edit-textarea')
       ->setName('text')
-      ->setValue($text);
+      ->setValue($text)
+      ->setDisableFullScreen(true);
   }
 
 }

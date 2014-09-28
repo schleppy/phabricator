@@ -67,8 +67,8 @@ final class PhabricatorProjectApplication extends PhabricatorApplication {
         'board/(?P<projectID>[1-9]\d*)/' => array(
           'edit/(?:(?P<id>\d+)/)?'
             => 'PhabricatorProjectColumnEditController',
-          'delete/(?:(?P<id>\d+)/)?'
-            => 'PhabricatorProjectBoardDeleteController',
+          'hide/(?:(?P<id>\d+)/)?'
+            => 'PhabricatorProjectColumnHideController',
           'column/(?:(?P<id>\d+)/)?'
             => 'PhabricatorProjectColumnDetailController',
           'import/'
@@ -93,6 +93,9 @@ final class PhabricatorProjectApplication extends PhabricatorApplication {
   protected function getCustomCapabilities() {
     return array(
       ProjectCreateProjectsCapability::CAPABILITY => array(),
+      ProjectCanLockProjectsCapability::CAPABILITY => array(
+        'default' => PhabricatorPolicies::POLICY_ADMIN,
+      ),
     );
   }
 

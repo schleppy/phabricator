@@ -14,6 +14,7 @@ final class HarbormasterBuildViewController
     $viewer = $request->getUser();
 
     $id = $this->id;
+    $generation = $request->getInt('g');
 
     $build = id(new HarbormasterBuildQuery())
       ->setViewer($viewer)
@@ -52,12 +53,17 @@ final class HarbormasterBuildViewController
       '/'.$build->getBuildable()->getMonogram());
     $crumbs->addTextCrumb($title);
 
+    if ($generation === null || $generation > $build->getBuildGeneration() ||
+      $generation < 0) {
+      $generation = $build->getBuildGeneration();
+    }
+
     $build_targets = id(new HarbormasterBuildTargetQuery())
       ->setViewer($viewer)
       ->needBuildSteps(true)
       ->withBuildPHIDs(array($build->getPHID()))
+      ->withBuildGenerations(array($generation))
       ->execute();
-
 
     if ($build_targets) {
       $messages = id(new HarbormasterBuildMessageQuery())
@@ -120,17 +126,28 @@ final class HarbormasterBuildViewController
 
       $target_box->addPropertyList($properties, pht('Overview'));
 
-      $description = $build_target->getBuildStep()->getDescription();
-      if ($description) {
-        $rendered = PhabricatorMarkupEngine::renderOneObject(
-          id(new PhabricatorMarkupOneOff())
-            ->setContent($description)
-            ->setPreserveLinebreaks(true),
-          'default',
-          $viewer);
+      $step = $build_target->getBuildStep();
 
-        $properties->addSectionHeader(pht('Description'));
-        $properties->addTextContent($rendered);
+      if ($step) {
+        $description = $step->getDescription();
+        if ($description) {
+          $rendered = PhabricatorMarkupEngine::renderOneObject(
+            id(new PhabricatorMarkupOneOff())
+              ->setContent($description)
+              ->setPreserveLinebreaks(true),
+            'default',
+            $viewer);
+
+          $properties->addSectionHeader(pht('Description'));
+          $properties->addTextContent($rendered);
+        }
+      } else {
+        $target_box->setFormErrors(
+          array(
+            pht(
+              'This build step has since been deleted on the build plan.  '.
+              'Some information may be omitted.'),
+          ));
       }
 
       $details = $build_target->getDetails();
@@ -435,9 +452,12 @@ final class HarbormasterBuildViewController
       $handles[$build->getBuildPlanPHID()]->renderLink());
 
     $properties->addProperty(
+      pht('Restarts'),
+      $build->getBuildGeneration());
+
+    $properties->addProperty(
       pht('Status'),
       $this->getStatus($build));
-
   }
 
   private function getStatus(HarbormasterBuild $build) {

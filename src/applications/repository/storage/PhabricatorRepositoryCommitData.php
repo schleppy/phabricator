@@ -30,12 +30,9 @@ final class PhabricatorRepositoryCommitData extends PhabricatorRepositoryDAO {
   public static function summarizeCommitMessage($message) {
     $summary = phutil_split_lines($message, $retain_endings = false);
     $summary = head($summary);
-    $summary = phutil_utf8_shorten($summary, self::SUMMARY_MAX_LENGTH);
-    //$pattern = "@^([A-Z]+\-\d+)\b@";
-    //if (preg_match($pattern, $summary, $matches)) {
-        //$summary = preg_replace('@^' . $matches[1] . '\b@', ' ', $summary);
-        //return phutil_tag('a', array("target" => "_blank", "href" => "https://jira.cs.sys/browse/" . $matches[1]), $matches[1]) . $summary;
-    //}
+    $summary = id(new PhutilUTF8StringTruncator())
+      ->setMaximumCodepoints(self::SUMMARY_MAX_LENGTH)
+      ->truncateString($summary);
 
     return $summary;
   }
